@@ -1,0 +1,19 @@
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# Eclipse
+bin/
+.settings/
+.classpath
+.project
+.externalToolBuilders
+
+# idea
+.idea/
+*.iml
+
+# Maven
+target/
