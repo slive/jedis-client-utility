@@ -4,7 +4,7 @@
 //	@date  2018-9-14
 //
 //==============================================================================
-package slive.jedis.client.core.inter;
+package slive.jedis.client.core.impl;
 
 import redis.clients.jedis.Jedis;
 import slive.jedis.client.core.JedisTranscations;

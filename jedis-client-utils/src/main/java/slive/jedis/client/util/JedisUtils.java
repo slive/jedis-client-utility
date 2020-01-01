@@ -2,7 +2,7 @@ package slive.jedis.client.util;
 
 import redis.clients.jedis.Jedis;
 import slive.jedis.client.core.*;
-import slive.jedis.client.core.inter.*;
+import slive.jedis.client.core.impl.*;
 import slive.jedis.core.inter.*;
 
 /**

@@ -1,4 +1,4 @@
-package slive.jedis.client.core.inter;
+package slive.jedis.client.core.impl;
 
 import org.junit.Before;
 import org.junit.Test;

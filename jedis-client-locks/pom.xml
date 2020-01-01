@@ -10,7 +10,27 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>jedis-client-locks</artifactId>
-    <version>jar</version>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jedis.slive</groupId>
+            <artifactId>jedis-client-utils</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
 
 
 </project>

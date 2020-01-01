@@ -4,7 +4,7 @@
 //	@date  2018-9-12
 //
 //==============================================================================
-package slive.jedis.client.core.inter;
+package slive.jedis.client.core.impl;
 
 import java.util.Collections;
 import java.util.LinkedList;
