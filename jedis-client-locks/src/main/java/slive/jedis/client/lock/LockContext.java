@@ -18,9 +18,9 @@ public interface LockContext {
 
     long getStartTime();
 
-    long getSuccessSpendTime();
+    long getLockSpendTime();
 
-    long getFailSpendTime();
+    long getHandleSpendTime();
 
     long getTotalSpendTime();
 

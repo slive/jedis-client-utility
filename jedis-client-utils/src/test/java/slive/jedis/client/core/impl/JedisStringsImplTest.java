@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
 import slive.jedis.client.core.JedisStrings;
+import slive.jedis.client.util.JedisUtils;
 
 /**
  * 描述：<br>
@@ -16,7 +17,7 @@ public class JedisStringsImplTest {
 
     @Before
     public void setUp() throws Exception {
-        Jedis jedis = new Jedis("192.168.235.184", 6379);
+        Jedis jedis = new Jedis("192.168.235.188", 6379);
         Strings = new JedisStringsImpl();
         Strings.initJedis(jedis);
     }
@@ -70,7 +71,9 @@ public class JedisStringsImplTest {
 
     @Test
     public void setnx() {
-
+        String key = "1213333";
+        System.out.println(Strings.setnx(key, "3423423423423"));
+        System.out.println(Strings.setnx(key, "23423423423423"));
     }
 
     @Test

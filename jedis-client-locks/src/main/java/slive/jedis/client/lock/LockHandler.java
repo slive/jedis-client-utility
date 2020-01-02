@@ -8,9 +8,9 @@ package slive.jedis.client.lock;
  */
 public interface LockHandler {
 
-    void onHandle(LockContext context);
+    Object onHandle(LockContext context);
 
-    void onFailed(LockContext context);
+    Object onFailed(LockContext context);
 
-    void onError(LockContext context);
+    Object onError(LockContext context, Throwable ex);
 }

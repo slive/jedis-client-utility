@@ -12,8 +12,8 @@ public interface LockExecute {
 
     LockExecute setLockConf(LockConf conf);
 
-    LockExecute execute(LockContext context, LockHandler handler);
+    <T extends BaseLockContext> LockExecute execute(T context, LockHandler handler);
 
-    LockExecute execute(LockContext context, LockConf conf, LockHandler handler);
+    <T extends BaseLockContext> LockExecute execute(T context, LockConf conf, LockHandler handler);
 
 }
