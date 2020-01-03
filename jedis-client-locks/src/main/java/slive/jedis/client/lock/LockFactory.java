@@ -7,4 +7,5 @@ package slive.jedis.client.lock;
  * @date 2020/1/1
  */
 public interface LockFactory {
+
 }
