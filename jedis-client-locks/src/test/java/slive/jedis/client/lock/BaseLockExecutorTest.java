@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import redis.clients.jedis.Jedis;
-import slive.jedis.client.lock.impl.JedisLock;
+import slive.jedis.client.lock.impl.JedisDislock;
 import slive.jedis.client.util.JedisUtils;
 
 /**
@@ -39,7 +39,7 @@ public class BaseLockExecutorTest {
         jedis.connect();
         JedisUtils.init(jedis);
         atomicLong = new AtomicLong();
-        execute = new BaseLockExecutor("test", 5000, new JedisLock());
+        execute = new BaseLockExecutor("test", 5000, new JedisDislock());
         LOGGER.info("[{}] init...", getDataStr());
         LOGGER.info("--------------------------------------------------------------------------\r\n");
     }

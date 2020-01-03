@@ -7,15 +7,15 @@ import slive.jedis.client.lock.Lock;
 import slive.jedis.client.util.JedisUtils;
 
 /**
- * 描述：基于redis客户端实现的分布式锁
+ * 描述：基于jedis客户端实现的分布式锁
  *
  * @author slive
  * @date 2020/1/1
  */
-public class JedisLock implements Lock {
+public class JedisDislock implements Lock {
 
     /** logger */
-    private static final Logger LOGGER = LoggerFactory.getLogger(JedisLock.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JedisDislock.class);
 
     private JedisStrings jStrings = JedisUtils.Strings;
 
