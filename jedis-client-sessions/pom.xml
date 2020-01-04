@@ -12,5 +12,12 @@
     <artifactId>jedis-client-sessions</artifactId>
     <version>jar</version>
 
+    <dependencies>
+        <dependency>
+            <groupId>jedis.slive</groupId>
+            <artifactId>jedis-client-utils</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
 
 </project>

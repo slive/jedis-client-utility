@@ -1,26 +1,64 @@
 package slive.jedis.client.session;
 
+import slive.jedis.client.util.JedisUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * 描述：<br>
  *
  * @author slive
- * @date 2019/12/30
+ * @date 2020/1/4
  */
-public interface BaseSessionCache<T extends BaseSession> {
+public class BaseSessionCache<T extends BaseSession> implements SessionCache<T> {
 
-    T get(String key);
+    private static final Map<String, BaseSessionCache> CACHE_MAP = new HashMap<String, BaseSessionCache>();
 
-    T getByFKey(String fkey);
+    private long timeout;
 
-    Set<T> getByCategory(String category);
+    private String prefix;
 
-    boolean put(String key, T value);
+    private Class<T> clazz;
 
-    boolean put(T value);
+    public BaseSessionCache(String prefix, long secondTimeout, Class<T> clazz) {
+        if (prefix == null) {
+            throw new NullPointerException("prefix is null.");
+        }
+        if (secondTimeout <= 0) {
+            throw new RuntimeException("timeout is below 0.");
+        }
+        if (clazz == null) {
+            throw new NullPointerException("clazz is null.");
+        }
+        if (CACHE_MAP.containsKey(prefix)) {
+            throw new RuntimeException("prefix:[" + prefix + "] has existed.");
+        }
+        CACHE_MAP.put(prefix, this);
+        this.prefix = prefix;
+        this.timeout = secondTimeout;
+        this.clazz = clazz;
 
-    boolean remove(String key);
+    }
 
-    boolean expire(String key);
+    public T getObj(String key) {
+        return JedisUtils.Strings.get(key, clazz);
+    }
+
+    public boolean put(String key, BaseSession value) {
+        return false;
+    }
+
+    public boolean put(BaseSession value) {
+        return false;
+    }
+
+    public boolean remove(String key) {
+        return false;
+    }
+
+    public boolean expire(String key) {
+        return false;
+    }
 }

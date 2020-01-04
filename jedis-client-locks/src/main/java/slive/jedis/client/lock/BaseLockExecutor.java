@@ -1,5 +1,7 @@
 package slive.jedis.client.lock;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
@@ -17,6 +19,8 @@ public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
 
     /** logger */
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseLockExecutor.class);
+
+    private static final Map<String, BaseLockExecutor> EXECUTOR_MAP = new HashMap<String, BaseLockExecutor>();
 
     private static final long DEFAULT_MILLIS_TIMEOUT = 15 * 1000;
 
@@ -51,6 +55,10 @@ public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
         setPrefix(prefix);
         setDefaultMillsTimeout(millisTimeout);
         setLock(lock);
+        if (EXECUTOR_MAP.containsKey(prefix)) {
+            throw new RuntimeException("prefix:[" + prefix + "] has existed.");
+        }
+        EXECUTOR_MAP.put(prefix, this);
     }
 
     public String getPrefix() {

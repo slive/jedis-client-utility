@@ -21,7 +21,11 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.59</version>
+        </dependency>
+        <dependency>
+            <groupId>jedis.slive</groupId>
+            <artifactId>jedis-client-utils</artifactId>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
