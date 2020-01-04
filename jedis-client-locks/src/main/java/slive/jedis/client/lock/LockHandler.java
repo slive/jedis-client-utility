@@ -2,6 +2,7 @@ package slive.jedis.client.lock;
 
 /**
  * 描述：<br>
+ *  锁处理器接口，获取锁前后执行的操作
  *
  * @author slive
  * @date 2020/1/1

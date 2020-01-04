@@ -102,9 +102,25 @@ public interface JedisStrings extends JedisKeys {
     /**
      * 在指定的 key 不存在时，为 key 设置指定的值
      * @param key 键值，不为空
+     * @param millisseconds 超时时间ms
+     * @param pojoObject 值对象，pojo类或者String，不为空
+     */
+    boolean psetnx(String key, long millisseconds, Object pojoObject);
+
+    /**
+     * 在指定的 key 不存在时，为 key 设置指定的值
+     * @param key 键值，不为空
      * @param pojoObject 值对象，pojo类或者String，不为空
      */
     boolean setnx(String key, Object pojoObject);
+
+    /**
+     * 在指定的 key 不存在时，为 key 设置指定的值
+     * @param key 键值，不为空
+     * @param seconds 超时时间s
+     * @param pojoObject 值对象，pojo类或者String，不为空
+     */
+    boolean setnx(String key, int seconds, Object pojoObject);
 
     /**
      * 用指定的字符串覆盖给定 key 所储存的字符串值，覆盖的位置从偏移量 offset 开始

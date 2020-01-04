@@ -15,6 +15,7 @@ import slive.jedis.client.util.JedisUtils;
 
 /**
  * 描述：<br>
+ *  锁执行器测试类
  *
  * @author slive
  * @date 2020/1/1
@@ -35,7 +36,7 @@ public class BaseLockExecutorTest {
 
     @org.junit.Before
     public void setUp() throws Exception {
-        jedis = new Jedis("192.168.235.189", 6379);
+        jedis = new Jedis("192.168.235.192", 6379);
         jedis.connect();
         JedisUtils.init(jedis);
         atomicLong = new AtomicLong();
@@ -68,7 +69,7 @@ public class BaseLockExecutorTest {
         execute.execute(context, new BaseLockHandler() {
             public Object onHandle(LockExecutorContext context) {
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(2500);
                 }
                 catch (InterruptedException e) {
                     e.printStackTrace();
@@ -89,8 +90,15 @@ public class BaseLockExecutorTest {
         final String owner = "slive";
         String action = "testExecuteReentry";
         BaseLockExecutorContext context = createExecutorContext(1, key, owner, action);
+        context.setTimeout(2000);
         execute.execute(context, new BaseLockHandler() {
             public Object onHandle(LockExecutorContext context) {
+                try {
+                    Thread.sleep(2500);
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 BaseLockExecutorContext recontext = createExecutorContext(1, key, owner, "rentry");
                 execute.execute(recontext, new BaseLockHandler() {
                     public Object onHandle(LockExecutorContext context) {
@@ -103,12 +111,6 @@ public class BaseLockExecutorTest {
                         return context.getOwner() + ":" + context.getAction();
                     }
                 });
-                try {
-                    Thread.sleep(2000);
-                }
-                catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 return context.getOwner() + ":" + context.getAction();
             }
         });

@@ -17,7 +17,7 @@ public class JedisStringsImplTest {
 
     @Before
     public void setUp() throws Exception {
-        Jedis jedis = new Jedis("192.168.235.188", 6379);
+        Jedis jedis = new Jedis("192.168.235.192", 6379);
         Strings = new JedisStringsImpl();
         Strings.initJedis(jedis);
     }
@@ -72,8 +72,14 @@ public class JedisStringsImplTest {
     @Test
     public void setnx() {
         String key = "1213333";
-        System.out.println(Strings.setnx(key, "3423423423423"));
-        System.out.println(Strings.setnx(key, "23423423423423"));
+        Strings.del(key);
+        System.out.println(Strings.setnx(key, 2, "3423423423423"));
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(Strings.setnx(key, 5,"23423423423423"));
     }
 
     @Test

@@ -2,6 +2,7 @@ package slive.jedis.client.lock;
 
 /**
  * 描述：<br>
+ * 通用实现的基本的锁执行器上下文
  *
  * @author slive
  * @date 2020/1/1
@@ -15,6 +16,8 @@ public class BaseLockExecutorContext implements LockExecutorContext {
     private String owner = "";
 
     private String action = "";
+
+    private long timeout;
 
     private boolean locked = false;
 
@@ -32,6 +35,11 @@ public class BaseLockExecutorContext implements LockExecutorContext {
         setKey(key);
     }
 
+    public BaseLockExecutorContext(String key, long timeout) {
+        setKey(key);
+        setTimeout(timeout);
+    }
+
     public String getKey() {
         return key;
     }
@@ -43,6 +51,10 @@ public class BaseLockExecutorContext implements LockExecutorContext {
         this.key = key;
     }
 
+    /**
+     * 锁的拥有者
+     * @return
+     */
     public String getOwner() {
         return owner;
     }
@@ -61,13 +73,30 @@ public class BaseLockExecutorContext implements LockExecutorContext {
         return this;
     }
 
-    public boolean isLocked() {
-        return locked;
+    public boolean isStillLocked() {
+        return locked && !isTimeout();
+    }
+
+    public boolean isTimeout() {
+        return (timeout - (System.currentTimeMillis() - startTime)) <= 0;
     }
 
     BaseLockExecutorContext setLocked(boolean locked) {
         this.locked = locked;
         this.lockedTime = System.currentTimeMillis();
+        return this;
+    }
+
+    /**
+     * 获取设置的超时时间ms
+     * @return
+     */
+    public long getTimeout() {
+        return timeout;
+    }
+
+    public BaseLockExecutorContext setTimeout(long timeout) {
+        this.timeout = timeout;
         return this;
     }
 
@@ -141,7 +170,9 @@ public class BaseLockExecutorContext implements LockExecutorContext {
         sbd.append(", owner=").append(getOwner());
         sbd.append(", action=").append(getAction());
         sbd.append(", startTime=").append(getStartTime());
-        sbd.append(", isLocked=").append(isLocked());
+        sbd.append(", isLocked=").append(locked);
+        sbd.append(", isTimeout=").append(isTimeout());
+        sbd.append(", timeout(ms)=").append(getTimeout());
         sbd.append(", lockSpendTime(ms)=").append(getLockSpendTime());
         sbd.append(", handleSpendTime(ms)=").append(getHandleSpendTime());
         sbd.append(", totalSpendTime(ms)=").append(getTotalSpendTime());
@@ -157,7 +188,9 @@ public class BaseLockExecutorContext implements LockExecutorContext {
         sbd.append("[key=").append(getKey());
         sbd.append(", owner=").append(getOwner());
         sbd.append(", action=").append(getAction());
-        sbd.append(", isLocked=").append(isLocked());
+        sbd.append(", isLocked=").append(locked);
+        sbd.append(", isTimeout=").append(isTimeout());
+        sbd.append(", timeout(ms)=").append(getTimeout());
         sbd.append("]");
         return sbd.toString();
     }

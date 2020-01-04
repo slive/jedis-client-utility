@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.params.SetParams;
 import slive.jedis.client.core.JedisStrings;
 import slive.jedis.client.util.PojoJsonUtils;
 
@@ -184,6 +185,22 @@ public final class JedisStringsImpl extends JedisKeysImpl implements JedisString
      * 在指定的 key 不存在时，为 key 设置指定的值
      * @param key 键值，不为空
      * @param pojoObject 值对象，pojo类或者String，不为空
+     * @param millisseconds 超时时间ms
+     */
+    public boolean psetnx(String key, long millisseconds, Object pojoObject) {
+        if (key == null || pojoObject == null) {
+            return false;
+        }
+        String setVal = PojoJsonUtils.convert2String(pojoObject);
+        SetParams params = new SetParams();
+        params.nx().px(millisseconds);
+        return RET_OK_STR.equals(jedis.set(key, setVal, params));
+    }
+
+    /**
+     * 在指定的 key 不存在时，为 key 设置指定的值
+     * @param key 键值，不为空
+     * @param pojoObject 值对象，pojo类或者String，不为空
      */
     public boolean setnx(String key, Object pojoObject) {
         return _set(key, pojoObject, true);
@@ -200,6 +217,22 @@ public final class JedisStringsImpl extends JedisKeysImpl implements JedisString
         else {
             return RET_OK_STR.equals(jedis.set(key, setVal));
         }
+    }
+
+    /**
+     * 在指定的 key 不存在时，为 key 设置指定的值
+     * @param key 键值，不为空
+     * @param seconds 超时时间s
+     * @param pojoObject 值对象，pojo类或者String，不为空
+     */
+    public boolean setnx(String key, int seconds, Object pojoObject) {
+        if (key == null || pojoObject == null) {
+            return false;
+        }
+        String setVal = PojoJsonUtils.convert2String(pojoObject);
+        SetParams params = new SetParams();
+        params.nx().ex(seconds);
+        return RET_OK_STR.equals(jedis.set(key, setVal, params));
     }
 
     /**

@@ -15,26 +15,35 @@ public interface Lock {
     /**
      * 获取锁
      * @param key 锁主键，需保证唯一性
-     * @param ower 锁拥有者
+     * @param owner 锁拥有者
      * @param millisTimeout 锁定时长，单位是ms
      * @return 返回是否锁定成功
      */
-    boolean lock(String key, String ower, long millisTimeout);
+    boolean lock(String key, String owner, long millisTimeout);
 
     /**
      * 尝试获取锁，直到锁获取超时
      * @param key 锁主键，需保证唯一性
-     * @param ower 锁拥有者
+     * @param owner 锁拥有者
      * @param millisTimeout 锁定时长，单位是ms
      * @return 返回是否锁定成功
      */
-    boolean tryLock(String key, String ower, long millisTimeout);
+    boolean tryLock(String key, String owner, long millisTimeout);
 
     /**
      * 解锁
      * @param key 锁主键，需保证唯一性
-     * @param ower 锁拥有者
+     * @param owner 锁拥有者
      */
-    void unLock(String key, String ower);
+    void unLock(String key, String owner);
+
+    /**
+     * 修改锁的时间
+     * @param key 锁主键，需保证唯一性
+     * @param owner 锁拥有者
+     * @param millisTimeout 延长时间ms
+     * @return 成功与否
+     */
+    boolean expireLock(String key, String owner, long millisTimeout);
 
 }

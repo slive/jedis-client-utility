@@ -8,4 +8,4 @@
     基于jedis开发的分布式锁。
     
 ## jedis-client-sessions
-    基于redis开发的会话共享。
+    基于jedis开发的会话共享。

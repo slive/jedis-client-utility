@@ -7,7 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 描述：默认基本的锁执行器
+ * 描述：<br>
+ * 通用实现的基本的锁执行器
  *
  * @author slive
  * @date 2020/1/1
@@ -17,21 +18,38 @@ public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
     /** logger */
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseLockExecutor.class);
 
+    private static final long DEFAULT_MILLIS_TIMEOUT = 15 * 1000;
+
     private ThreadLocal<BaseLockExecutorContext> threadLocal = new ThreadLocal<BaseLockExecutorContext>();
 
-    private long millisTimeout;
+    private long defaultMillsTimeout;
 
     private String prefix;
 
     private Lock lock;
 
+    /**
+     * 锁执行器构造函数
+     * @param prefix 锁前缀，用于区分不同模块的锁，以免重复
+     * @param defMillisTimeout 默认超时时间ms，必须为整数，注意设置该值，避免锁过快超时
+     * @param lock 锁见{@link Lock}
+     */
     public BaseLockExecutor(String prefix, long defMillisTimeout, Lock lock) {
         init(prefix, defMillisTimeout, lock);
     }
 
+    /**
+     * 锁执行器构造函数，锁时间为默认值，见{@link #DEFAULT_MILLIS_TIMEOUT}
+     * @param prefix 锁前缀，用于区分不同模块的锁，以免重复
+     * @param lock 锁见{@link Lock}
+     */
+    public BaseLockExecutor(String prefix, Lock lock) {
+        init(prefix, DEFAULT_MILLIS_TIMEOUT, lock);
+    }
+
     private void init(String prefix, long millisTimeout, Lock lock) {
         setPrefix(prefix);
-        setMillisTimeout(millisTimeout);
+        setDefaultMillsTimeout(millisTimeout);
         setLock(lock);
     }
 
@@ -46,11 +64,15 @@ public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
         this.prefix = prefix;
     }
 
-    private void setMillisTimeout(long millisTimeout) {
-        if (millisTimeout <= 0) {
-            throw new RuntimeException("default millisTimeout below 0.");
+    public long getDefaultMillisTimeout() {
+        return defaultMillsTimeout;
+    }
+
+    private void setDefaultMillsTimeout(long defaultMillsTimeout) {
+        if (defaultMillsTimeout <= 0) {
+            throw new RuntimeException("default defaultMillsTimeout below 0.");
         }
-        this.millisTimeout = millisTimeout;
+        this.defaultMillsTimeout = defaultMillsTimeout;
     }
 
     private void setLock(Lock lock) {
@@ -61,49 +83,48 @@ public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
     }
 
     public LockExecutor execute(BaseLockExecutorContext context, LockHandler handler) {
-        return execute(context, millisTimeout, handler);
-    }
-
-    public LockExecutor execute(BaseLockExecutorContext context, long millisTimeout, LockHandler handler) {
-        LOGGER.info("start to execute, context:{}, millisTimeout:{}", context, millisTimeout);
         if (context == null) {
             throw new NullPointerException("context is null.");
-        }
-
-        if (millisTimeout <= 0) {
-            throw new NullPointerException("millisTimeout below 0.");
         }
 
         if (handler == null) {
             throw new NullPointerException("handler is null.");
         }
+        LOGGER.info("start to execute, context:{}, defaultMillsTimeout:{}", context.toSimpleString(),
+                defaultMillsTimeout);
+        long timeout = context.getTimeout();
+        if (timeout <= 0) {
+            timeout = defaultMillsTimeout;
+            context.setTimeout(timeout);
+        }
+
         String finalKey = converFinalKey(context);
         String value = converFinalValue(context);
-        BaseLockExecutorContext tContext = null;
-        boolean reLocked = false;
+        BaseLockExecutorContext rtContext = null;
+        boolean reentryLocked = false;
         boolean locked = false;
-        boolean reentry = false;
         try {
-            tContext = getLocalContext();
-            if (tContext != null) {
+            rtContext = getLocalContext();
+            if (rtContext != null) {
                 // 非重入，设置进线程变量中
-                reentry = tContext.equals(context);
-                LOGGER.info("reentry execute , tContext:{}, reentry:{}", tContext, reentry);
+                boolean reentry = rtContext.equals(context);
+                reentryLocked = rtContext.isStillLocked();
+                LOGGER.info("reentry:{}, rtContext:{}", reentry, rtContext);
             }
+            // 无论是否是已经存在，都更新为最新的context
             addLocalContext(context);
 
-            if (reentry && tContext.isLocked()) {
-                reLocked = true;
-                locked = reLocked;
+            if (reentryLocked) {
+                // 已获取锁后延长锁的时间
+                locked = lock.expireLock(finalKey, value, timeout);
             }
-
-            // 已获取锁后，不需要继续获取
-            LOGGER.info("reLocked:{}", reLocked);
-            if (!reLocked) {
-                locked = lock.tryLock(finalKey, value, millisTimeout);
+            else {
+                // 未获取锁继续获取
+                locked = lock.tryLock(finalKey, value, timeout);
             }
             context.setLocked(locked);
             if (locked) {
+                LOGGER.info("execute handler, context:{}", context.toSimpleString());
                 Object ret = handler.onHandle(context);
                 context.setResult(ret).setHandledTime();
             }
@@ -127,14 +148,16 @@ public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
             }
         }
         finally {
-            if (locked && !reLocked) {
+            // 自己申请锁自己释放
+            if (locked && !reentryLocked) {
                 lock.unLock(finalKey, value);
             }
+
             // 删除当前context
             clearLocalContext();
-            if (reentry) {
+            if (rtContext != null) {
                 // 恢复重入保留原有的context
-                addLocalContext(tContext);
+                addLocalContext(rtContext);
             }
 
             try {

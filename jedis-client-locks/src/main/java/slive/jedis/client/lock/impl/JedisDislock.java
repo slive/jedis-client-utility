@@ -19,25 +19,21 @@ public class JedisDislock implements Lock {
 
     private JedisStrings jStrings = JedisUtils.Strings;
 
-    public boolean lock(String key, String value, long millisTimeout) {
-        boolean setnx = (boolean) jStrings.setnx(key, value);
-        if (setnx) {
-            return jStrings.pexpire(key, millisTimeout);
-        }
-        return false;
+    public boolean lock(String key, String owner, long millisTimeout) {
+        return jStrings.psetnx(key, millisTimeout, owner);
     }
 
-    public boolean tryLock(String key, String value, long millisTimeout) {
+    public boolean tryLock(String key, String owner, long millisTimeout) {
         boolean ret = false;
         long lefTimeout = millisTimeout;
         long startTime = System.currentTimeMillis();
         long sleepTime = startTime;
         long tryTimes = 0;
-        LOGGER.info("start to tryLock, key:{}, value:{}", key, value);
+        LOGGER.info("start to tryLock, key:{}, value:{}", key, owner);
         do {
             tryTimes++;
             sleepTime = System.currentTimeMillis();
-            ret = lock(key, value, millisTimeout);
+            ret = lock(key, owner, millisTimeout);
             // 等待下一次循环
             if (!ret) {
                 try {
@@ -51,20 +47,29 @@ public class JedisDislock implements Lock {
             // 计算剩余时间，如果剩余时间太短，可能没必提供锁
             lefTimeout = (lefTimeout - (System.currentTimeMillis() - startTime));
             if (lefTimeout < 100) {
-                unLock(key, value);
+                unLock(key, owner);
                 break;
             }
         }
         while (!ret);
-        LOGGER.info("start to tryLock, isLocked:{}, spendTime:{}, try times:{}", ret,
+        LOGGER.info("fiinsh tryLock, isLocked:{}, spendTime:{}, try times:{}", ret,
                 (System.currentTimeMillis() - startTime), tryTimes);
         return ret;
     }
 
-    public void unLock(String key, String value) {
+    public void unLock(String key, String owner) {
         String v = jStrings.get(key);
-        if (v != null && v.equals(value)) {
+        if (v != null && v.equals(owner)) {
+            LOGGER.info("start to unLock, key:{}, owner:{}", key, owner);
             jStrings.del(key);
         }
+    }
+
+    public boolean expireLock(String key, String owner, long millisTimeout) {
+        String v = jStrings.get(key);
+        if (v != null && v.equals(owner)) {
+            return jStrings.pexpire(key, millisTimeout);
+        }
+        return false;
     }
 }
