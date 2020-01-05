@@ -8,6 +8,7 @@ import java.util.Set;
 
 /**
  * 描述：<br>
+ *     基本的缓存会话实现
  *
  * @author slive
  * @date 2020/1/4
@@ -16,13 +17,13 @@ public class BaseSessionCache<T extends BaseSession> implements SessionCache<T> 
 
     private static final Map<String, BaseSessionCache> CACHE_MAP = new HashMap<String, BaseSessionCache>();
 
-    private long timeout;
+    private int timeout;
 
     private String prefix;
 
-    private Class<T> clazz;
+    protected Class<T> clazz;
 
-    public BaseSessionCache(String prefix, long secondTimeout, Class<T> clazz) {
+    public BaseSessionCache(String prefix, int secondTimeout, Class<T> clazz) {
         if (prefix == null) {
             throw new NullPointerException("prefix is null.");
         }
@@ -42,23 +43,55 @@ public class BaseSessionCache<T extends BaseSession> implements SessionCache<T> 
 
     }
 
+    public int getTimeout() {
+        return timeout;
+    }
+
+    public String get(String key) {
+        String finalKey = convertFinalKey(key);
+        return JedisUtils.Strings.get(finalKey);
+    }
+
+    private String convertFinalKey(String key) {
+        if (key == null) {
+            throw new NullPointerException("key is null.");
+        }
+        return prefix + "#" + key;
+    }
+
     public T getObj(String key) {
-        return JedisUtils.Strings.get(key, clazz);
+        String finalKey = convertFinalKey(key);
+        return JedisUtils.Strings.get(finalKey, clazz);
     }
 
-    public boolean put(String key, BaseSession value) {
-        return false;
+    public boolean put(String key, T value) {
+        String finalKey = convertFinalKey(key);
+        return JedisUtils.Strings.setex(finalKey, timeout, value);
     }
 
-    public boolean put(BaseSession value) {
-        return false;
+    public boolean put(String key, T value, int timeout) {
+        String finalKey = convertFinalKey(key);
+        if (timeout <= 0) {
+            timeout = getTimeout();
+        }
+        return JedisUtils.Strings.setex(finalKey, timeout, value);
     }
 
-    public boolean remove(String key) {
-        return false;
+    public void remove(String key) {
+        String finalKey = convertFinalKey(key);
+        JedisUtils.Strings.del(finalKey);
     }
 
     public boolean expire(String key) {
-        return false;
+        String finalKey = convertFinalKey(key);
+        return JedisUtils.Strings.expire(finalKey, timeout);
+    }
+
+    public boolean expire(String key, int timeout) {
+        String finalKey = convertFinalKey(key);
+        if (timeout <= 0) {
+            timeout = getTimeout();
+        }
+        return JedisUtils.Strings.expire(finalKey, timeout);
     }
 }
