@@ -1,14 +1,14 @@
 package slive.jedis.client.session;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import slive.jedis.client.session.annotation.SessionCategory;
 import slive.jedis.client.session.annotation.SessionFKey;
 import slive.jedis.client.session.annotation.SessionKey;
+import slive.jedis.client.util.JedisUtils;
 
 /**
  * 描述：<br>
@@ -19,6 +19,8 @@ import slive.jedis.client.session.annotation.SessionKey;
 public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements RelateSessionCache<T> {
 
     private Map<String, FSessionCache> fSessionCaches = new HashMap<>();
+
+    private Map<String, CategorySessionCache> categorys = new HashMap<>();
 
     private Method sessionKeyMethod;
 
@@ -55,24 +57,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                 vaildType(clazz, fName);
                 String fPrefix = convertFinalFPrefix(prefix, fName);
                 if (fSessionCaches.containsKey(fPrefix)) {
-                    String first = fName.substring(0, 1);
-                    String firstUpperFName = first.toUpperCase();
-                    String nFName = fName.replaceFirst(first, firstUpperFName);
-                    String readMethodName = "get" + nFName;
-                    Method getMethod = null;
-                    try {
-                        getMethod = clazz.getMethod(readMethodName, null);
-                        if (getMethod == null) {
-                            readMethodName = "get" + fName;
-                            getMethod = clazz.getMethod(readMethodName, null);
-                        }
-                    }
-                    catch (NoSuchMethodException e) {
-                        e.printStackTrace();
-                    }
-                    if (getMethod == null) {
-                        throw new RuntimeException(readMethodName + " has not existed.");
-                    }
+                    Method getMethod = fetchGetMethod(clazz, fName);
                     FSessionCache fbs = new FSessionCache(fPrefix, secondTimeout, field, getMethod);
                     fSessionCaches.put(fPrefix, fbs);
                 }
@@ -84,12 +69,37 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
             SessionCategory sc = field.getAnnotation(SessionCategory.class);
             if (sc != null) {
                 vaildType(clazz, fName);
+                Method getMethod = fetchGetMethod(clazz, fName);
+                CategorySessionCache csc = new CategorySessionCache(prefix, getTimeout(), field, getMethod);
+                categorys.put(csc.getCategoryName(), csc);
             }
         }
     }
 
+    private Method fetchGetMethod(Class<T> clazz, String fName) {
+        String first = fName.substring(0, 1);
+        String firstUpperFName = first.toUpperCase();
+        String nFName = fName.replaceFirst(first, firstUpperFName);
+        String readMethodName = "get" + nFName;
+        Method getMethod = null;
+        try {
+            getMethod = clazz.getMethod(readMethodName, null);
+            if (getMethod == null) {
+                readMethodName = "get" + fName;
+                getMethod = clazz.getMethod(readMethodName, null);
+            }
+        }
+        catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+        if (getMethod == null) {
+            throw new RuntimeException(readMethodName + " has not existed.");
+        }
+        return getMethod;
+    }
+
     private static String convertFinalFPrefix(String prefix, String fName) {
-        return prefix + "#" + fName;
+        return prefix + "#fk#" + fName;
     }
 
     private static void vaildType(Class<?> clazz, String fName) {
@@ -100,8 +110,61 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
 
     @Override
     public boolean put(String key, T value) {
+        T oldObj = getObj(key);
+        super.put(key, value);
+        // 处理外键
+        for (Map.Entry<String, FSessionCache> fsce : fSessionCaches.entrySet()) {
+            FSessionCache fsc = fsce.getValue();
+            try {
+                Method method = fsc.getMethod();
+                Object fV = null;
+                // 若有旧的值，则先删除
+                if (oldObj != null) {
+                    fV = method.invoke(value, null);
+                    if (fV != null) {
+                        fsc.remove(fV.toString());
+                    }
+                }
+                // 更新新的值
+                fV = method.invoke(value, null);
+                if (fV != null) {
+                    fsc.put(fV.toString(), key);
+                }
+            }
+            catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
 
-        return super.put(key, value);
+        for (CategorySessionCache csc : categorys.values()) {
+            try {
+            Method method = csc.getMethod();
+            Object fV = null;
+            // 若有旧的值，则先删除
+            if (oldObj != null) {
+                fV = method.invoke(value, null);
+                if (fV != null) {
+                    csc.remove(fV.toString(), key);
+                }
+            }
+            // 更新新的值
+            fV = method.invoke(value, null);
+            if (fV != null) {
+                csc.put(fV.toString(), key);
+            }
+        }
+            catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+            catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        }
+
+        return true;
     }
 
     @Override
@@ -111,6 +174,14 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
 
     @Override
     public boolean put(T value) {
+        try {
+            Object key = sessionKeyMethod.invoke(value.getClass(), null);
+            return put(key.toString(), value);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
@@ -138,6 +209,51 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         public Method getMethod() {
             return method;
         }
+    }
+
+    class CategorySessionCache {
+
+        private Field field;
+
+        private Method method;
+
+        private String categoryName;
+
+        private int timeout;
+
+        public CategorySessionCache(String prefix, int secondTimeout, Field field, Method method) {
+            this.field = field;
+            this.method = method;
+            this.categoryName = prefix + "#cs#" + field.getName();
+            this.timeout = secondTimeout;
+        }
+
+        public Field getField() {
+            return field;
+        }
+
+        public Method getMethod() {
+            return method;
+        }
+
+        public String getCategoryName() {
+            return categoryName;
+        }
+
+        public void put(String key, String value) {
+            JedisUtils.SortSets.zadd(key, -System.currentTimeMillis(), value);
+            JedisUtils.SortSets.expire(key, timeout);
+        }
+
+        public void remove(String key, String value) {
+            JedisUtils.SortSets.zrem(key, value);
+            JedisUtils.SortSets.expire(key, timeout);
+        }
+
+        public void clear(String key) {
+            JedisUtils.SortSets.del(key);
+        }
+
     }
 
 }
