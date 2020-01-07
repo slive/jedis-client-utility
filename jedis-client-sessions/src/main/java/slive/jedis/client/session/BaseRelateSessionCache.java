@@ -141,35 +141,36 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
 
         for (CategorySessionCache csc : categorys.values()) {
             try {
-            Method method = csc.getMethod();
-            Object fV = null;
-            // 若有旧的值，则先删除
-            if (oldObj != null) {
+                Method method = csc.getMethod();
+                Object fV = null;
+                // 若有旧的值，则先删除
+                if (oldObj != null) {
+                    fV = method.invoke(value, null);
+                    if (fV != null) {
+                        csc.remove(fV.toString(), key);
+                    }
+                }
+                // 更新新的值
                 fV = method.invoke(value, null);
                 if (fV != null) {
-                    csc.remove(fV.toString(), key);
+                    csc.put(fV.toString(), key);
                 }
             }
-            // 更新新的值
-            fV = method.invoke(value, null);
-            if (fV != null) {
-                csc.put(fV.toString(), key);
-            }
-        }
             catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+                e.printStackTrace();
+            }
             catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
+                e.printStackTrace();
+            }
         }
 
         return true;
     }
 
     @Override
-    public T getByFKey(String fField, String fkey) {
-        return null;
+    public T getByFKey(String fkName, String fkVal) {
+        String key = fSessionCaches.get(convertFinalFPrefix(prefix, fkName)).getObj(fkVal);
+        return getObj(key);
     }
 
     @Override
@@ -177,17 +178,21 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         try {
             Object key = sessionKeyMethod.invoke(value.getClass(), null);
             return put(key.toString(), value);
-        } catch (IllegalAccessException e) {
+        }
+        catch (IllegalAccessException e) {
             e.printStackTrace();
-        } catch (InvocationTargetException e) {
+        }
+        catch (InvocationTargetException e) {
             e.printStackTrace();
         }
         return false;
     }
 
     @Override
-    public Set<T> getByCategory(String categoryField, String categoryVal) {
-        return null;
+    public List<T> getByCategory(String cName, String cVal) {
+        Set<String> keys = categorys.get(convertFinalCategoryName(prefix, cName)).get(cVal);
+        //TODO 需转换？
+        return JedisUtils.Strings.mget(clazz, keys.toArray(new String[keys.size()]));
     }
 
     class FSessionCache extends BaseSessionCache<String> {
@@ -213,6 +218,8 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
 
     class CategorySessionCache {
 
+        private String prefix;
+
         private Field field;
 
         private Method method;
@@ -224,7 +231,9 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         public CategorySessionCache(String prefix, int secondTimeout, Field field, Method method) {
             this.field = field;
             this.method = method;
-            this.categoryName = prefix + "#cs#" + field.getName();
+            this.prefix = prefix;
+            String cName = field.getName();
+            this.categoryName = convertFinalCategoryName(prefix, cName);
             this.timeout = secondTimeout;
         }
 
@@ -241,19 +250,36 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         }
 
         public void put(String key, String value) {
+            key = convertFinalCategoryKey(prefix, key);
             JedisUtils.SortSets.zadd(key, -System.currentTimeMillis(), value);
             JedisUtils.SortSets.expire(key, timeout);
         }
 
         public void remove(String key, String value) {
+            key = convertFinalCategoryKey(prefix, key);
             JedisUtils.SortSets.zrem(key, value);
             JedisUtils.SortSets.expire(key, timeout);
         }
 
         public void clear(String key) {
+            key = convertFinalCategoryKey(prefix, key);
             JedisUtils.SortSets.del(key);
         }
 
+        public Set<String> get(String key) {
+            key = convertFinalCategoryKey(prefix, key);
+            long zcar = JedisUtils.SortSets.zcar(key);
+            return JedisUtils.SortSets.zrange(key, 0, zcar);
+        }
+
+    }
+
+    private static String convertFinalCategoryName(String prefix, String cName) {
+        return prefix + "#cs#" + cName;
+    }
+
+    private static String convertFinalCategoryKey(String prefix, String key) {
+        return prefix + "#cs#" + key;
     }
 
 }

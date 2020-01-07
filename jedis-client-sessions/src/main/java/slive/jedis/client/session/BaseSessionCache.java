@@ -19,7 +19,7 @@ public class BaseSessionCache<T> implements SessionCache<T> {
 
     private int timeout;
 
-    private String prefix;
+    protected String prefix;
 
     protected Class<T> clazz;
 

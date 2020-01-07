@@ -1,6 +1,6 @@
 package slive.jedis.client.session;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * 描述：<br>
@@ -20,5 +20,5 @@ public interface RelateSessionCache<T> extends SessionCache<T> {
 
     boolean put(T value);
 
-    Set<T> getByCategory(String categoryField, String categoryVal);
+    List<T> getByCategory(String categoryField, String categoryVal);
 }
