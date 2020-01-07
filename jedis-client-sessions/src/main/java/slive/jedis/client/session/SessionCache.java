@@ -1,7 +1,5 @@
 package slive.jedis.client.session;
 
-import java.util.Set;
-
 /**
  * 描述：<br>
  *  会话缓存接口类，包括获取会话，加入会话，删除会话和延长会话等
@@ -9,7 +7,7 @@ import java.util.Set;
  * @author slive
  * @date 2019/12/30
  */
-public interface SessionCache<T extends BaseSession> {
+public interface SessionCache<T> {
 
     /**
      * 默认超时时间，单位s

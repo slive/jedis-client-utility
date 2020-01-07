@@ -8,7 +8,7 @@ import java.util.Set;
  * @author slive
  * @date 2020/1/4
  */
-public interface RelateSessionCache<T extends BaseSession> extends SessionCache<T> {
+public interface RelateSessionCache<T> extends SessionCache<T> {
 
     /**
      * 通过外键获取对应的pojo值

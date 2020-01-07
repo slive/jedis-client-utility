@@ -13,7 +13,7 @@ import java.util.Set;
  * @author slive
  * @date 2020/1/4
  */
-public class BaseSessionCache<T extends BaseSession> implements SessionCache<T> {
+public class BaseSessionCache<T> implements SessionCache<T> {
 
     private static final Map<String, BaseSessionCache> CACHE_MAP = new HashMap<String, BaseSessionCache>();
 
