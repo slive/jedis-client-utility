@@ -1,8 +1,11 @@
 package slive.jedis.client.session;
 
+import com.sun.javafx.font.t2k.T2KFactory;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.alibaba.fastjson.JSON;
 
 import redis.clients.jedis.Jedis;
 import slive.jedis.client.util.JedisUtils;
@@ -25,11 +28,11 @@ public class BaseRelateSessionCacheTest {
     @org.junit.Before
     public void setUp() throws Exception {
         try {
-            jedis = new Jedis("192.168.235.200", 6379);
+            jedis = new Jedis("192.168.235.201", 6379);
             jedis.connect();
             JedisUtils.init(jedis);
-
-            baseSessionCache = new BaseRelateSessionCache<TestRelateSession>("testrelate", 2, TestRelateSession.class);
+            LOGGER.info("init sessioncache");
+            baseSessionCache = new BaseRelateSessionCache<TestRelateSession>("testrelate", 20, TestRelateSession.class);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -47,13 +50,24 @@ public class BaseRelateSessionCacheTest {
         ts.setfKey("444444");
         baseSessionCache.put(ts);
         try {
-            Thread.sleep(1000);
+            Thread.sleep(500);
         }
         catch (InterruptedException e) {
             e.printStackTrace();
         }
         String ret = baseSessionCache.get(ts.getKey());
         LOGGER.info("ret:{}", ret);
+
+        Object retByFkey = baseSessionCache.getByFKey("fKey", ts.getfKey());
+        LOGGER.info("retByFkey:{}", JSON.toJSONString(retByFkey));
+
+        ts.setKey("356222262");
+        ts.setfKey("433222");
+        ts.setType("1111");
+        ts.setValue("3432222");
+        baseSessionCache.put(ts);
+        Object retByCategory = baseSessionCache.getByCategory("type", ts.getType());
+        LOGGER.info("retByCategory:{}", JSON.toJSONString(retByCategory));
 
     }
 

@@ -3,11 +3,10 @@ package slive.jedis.client.session;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import slive.jedis.client.session.annotation.SessionCategory;
 import slive.jedis.client.session.annotation.SessionFKey;
 import slive.jedis.client.session.annotation.SessionKey;
@@ -20,6 +19,9 @@ import slive.jedis.client.util.JedisUtils;
  * @date 2020/1/5
  */
 public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements RelateSessionCache<T> {
+
+    /** logger */
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseRelateSessionCache.class);
 
     private Map<String, FSessionCache> fSessionCaches = new HashMap<>();
 
@@ -35,17 +37,14 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         // 可以有N个外键1:1
         // 可以有M个分类键，1:m
         // 做排序？
-        Field[] fields = clazz.getFields();
+        Field[] fields = clazz.getDeclaredFields();
         for (int index = 0; index < fields.length; index++) {
             Field field = fields[index];
             Class<?> fClazz = field.getType();
-            if (!ClassUtils.isStringType(fClazz)) {
-                throw new RuntimeException("");
-            }
             String fName = field.getName();
             SessionKey sk = field.getAnnotation(SessionKey.class);
             if (sk != null) {
-                vaildType(clazz, fName);
+                vaildType(fClazz, fName);
                 if (sessionKeyField != null) {
                     throw new RuntimeException("SessionKey has existed, the field:" + fName);
                 }
@@ -58,9 +57,9 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
 
             SessionFKey fk = field.getAnnotation(SessionFKey.class);
             if (fk != null) {
-                vaildType(clazz, fName);
+                vaildType(fClazz, fName);
                 String fPrefix = convertFinalFPrefix(prefix, fName);
-                if (fSessionCaches.containsKey(fPrefix)) {
+                if (!fSessionCaches.containsKey(fPrefix)) {
                     Method getMethod = fetchGetMethod(clazz, fName);
                     FSessionCache fbs = new FSessionCache(fPrefix, secondTimeout, field, getMethod);
                     fSessionCaches.put(fPrefix, fbs);
@@ -72,7 +71,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
 
             SessionCategory sc = field.getAnnotation(SessionCategory.class);
             if (sc != null) {
-                vaildType(clazz, fName);
+                vaildType(fClazz, fName);
                 Method getMethod = fetchGetMethod(clazz, fName);
                 CategorySessionCache csc = new CategorySessionCache(prefix, getTimeout(), field, getMethod);
                 categorys.put(csc.getCategoryName(), csc);
@@ -88,6 +87,11 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         Method getMethod = null;
         try {
             getMethod = clazz.getMethod(readMethodName, null);
+        }
+        catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+        try {
             if (getMethod == null) {
                 readMethodName = "get" + fName;
                 getMethod = clazz.getMethod(readMethodName, null);
@@ -99,6 +103,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         if (getMethod == null) {
             throw new RuntimeException(readMethodName + " has not existed.");
         }
+        LOGGER.info("method:{}", getMethod);
         return getMethod;
     }
 
@@ -115,6 +120,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
     @Override
     public boolean put(String key, T value) {
         T oldObj = getObj(key);
+        LOGGER.info("oldvalue:{}", oldObj);
         super.put(key, value);
         // 处理外键
         for (Map.Entry<String, FSessionCache> fsce : fSessionCaches.entrySet()) {
@@ -172,6 +178,12 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
     }
 
     @Override
+    public void remove(String key) {
+        super.remove(key);
+        ///
+    }
+
+    @Override
     public T getByFKey(String fkName, String fkVal) {
         String key = fSessionCaches.get(convertFinalFPrefix(prefix, fkName)).getObj(fkVal);
         return getObj(key);
@@ -180,7 +192,8 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
     @Override
     public boolean put(T value) {
         try {
-            Object key = sessionKeyMethod.invoke(value.getClass(), null);
+            Object key = sessionKeyMethod.invoke(value, null);
+            LOGGER.info("key:{}", key);
             return put(key.toString(), value);
         }
         catch (IllegalAccessException e) {
@@ -275,6 +288,9 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         public Set<String> get(String key) {
             key = convertFinalCategoryKey(prefix, key);
             long zcar = JedisUtils.SortSets.zcar(key);
+            if(zcar == 0){
+                return Collections.emptySet();
+            }
             return JedisUtils.SortSets.zrange(key, 0, zcar);
         }
 

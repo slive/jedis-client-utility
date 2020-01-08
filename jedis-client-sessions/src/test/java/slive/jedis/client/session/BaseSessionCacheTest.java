@@ -27,7 +27,7 @@ public class BaseSessionCacheTest {
     @org.junit.Before
     public void setUp() throws Exception {
         try {
-            jedis = new Jedis("192.168.235.200", 6379);
+            jedis = new Jedis("192.168.235.201", 6379);
             jedis.connect();
             JedisUtils.init(jedis);
 
