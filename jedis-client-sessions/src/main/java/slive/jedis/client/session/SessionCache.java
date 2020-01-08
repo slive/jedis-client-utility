@@ -1,5 +1,7 @@
 package slive.jedis.client.session;
 
+import java.util.List;
+
 /**
  * 描述：<br>
  *  会话缓存接口类，包括获取会话，加入会话，删除会话和延长会话等
@@ -28,6 +30,13 @@ public interface SessionCache<T> {
      * @return 返回值，非空则成功
      */
     T getObj(String key);
+
+    /**
+     * 通过多个主键获取多个对象
+     * @param keys 主键数组
+     * @return 返回值列表，为空则获取失败
+     */
+    List<T> getObjs(String... keys);
 
     /**
      * 通过主键添加或者更新对应的值，更新成功后并在{@link #getTimeout()}时间后失效

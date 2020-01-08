@@ -3,7 +3,10 @@ package slive.jedis.client.session;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import slive.jedis.client.session.annotation.SessionCategory;
 import slive.jedis.client.session.annotation.SessionFKey;
@@ -48,6 +51,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                 }
                 else {
                     sessionKeyField = field;
+                    sessionKeyMethod = fetchGetMethod(clazz, fName);
                     continue;
                 }
             }
@@ -191,8 +195,10 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
     @Override
     public List<T> getByCategory(String cName, String cVal) {
         Set<String> keys = categorys.get(convertFinalCategoryName(prefix, cName)).get(cVal);
-        //TODO 需转换？
-        return JedisUtils.Strings.mget(clazz, keys.toArray(new String[keys.size()]));
+        if (keys == null || keys.isEmpty()) {
+            return null;
+        }
+        return getObjs(keys.toArray(new String[keys.size()]));
     }
 
     class FSessionCache extends BaseSessionCache<String> {
