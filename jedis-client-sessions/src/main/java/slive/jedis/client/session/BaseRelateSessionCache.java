@@ -270,7 +270,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
 
         public void put(String key, String value) {
             key = convertFinalCategoryKey(prefix, key);
-            JedisUtils.SortSets.zadd(key, -System.currentTimeMillis(), value);
+            JedisUtils.SortSets.zadd(key, -System.currentTimeMillis() * 0.1, value);
             JedisUtils.SortSets.expire(key, timeout);
         }
 
@@ -288,7 +288,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         public Set<String> get(String key) {
             key = convertFinalCategoryKey(prefix, key);
             long zcar = JedisUtils.SortSets.zcar(key);
-            if(zcar == 0){
+            if (zcar == 0) {
                 return Collections.emptySet();
             }
             return JedisUtils.SortSets.zrange(key, 0, zcar);

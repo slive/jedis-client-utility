@@ -28,7 +28,7 @@ public class BaseRelateSessionCacheTest {
     @org.junit.Before
     public void setUp() throws Exception {
         try {
-            jedis = new Jedis("192.168.235.201", 6379);
+            jedis = new Jedis("192.168.235.203", 6379);
             jedis.connect();
             JedisUtils.init(jedis);
             LOGGER.info("init sessioncache");
@@ -63,7 +63,7 @@ public class BaseRelateSessionCacheTest {
 
         ts.setKey("356222262");
         ts.setfKey("433222");
-        ts.setType("1111");
+        ts.setType("111");
         ts.setValue("3432222");
         baseSessionCache.put(ts);
         Object retByCategory = baseSessionCache.getByCategory("type", ts.getType());
