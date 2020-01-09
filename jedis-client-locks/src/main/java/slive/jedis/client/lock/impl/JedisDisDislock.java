@@ -12,10 +12,10 @@ import slive.jedis.client.util.JedisUtils;
  * @author slive
  * @date 2020/1/1
  */
-public class JedisDislock implements Lock {
+public class JedisDisDislock implements Lock {
 
     /** logger */
-    private static final Logger LOGGER = LoggerFactory.getLogger(JedisDislock.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JedisDisDislock.class);
 
     private JedisStrings jStrings = JedisUtils.Strings;
 
@@ -37,7 +37,7 @@ public class JedisDislock implements Lock {
             // 等待下一次循环
             if (!ret) {
                 try {
-                    Thread.sleep(Math.round((System.currentTimeMillis() - sleepTime) * 0.5 + 10));
+                    Thread.sleep(Math.round((System.currentTimeMillis() - sleepTime) * 0.5 + 20));
                 }
                 catch (InterruptedException e) {
                     // ignore
@@ -46,7 +46,7 @@ public class JedisDislock implements Lock {
 
             // 计算剩余时间，如果剩余时间太短，可能没必提供锁
             lefTimeout = (lefTimeout - (System.currentTimeMillis() - startTime));
-            if (lefTimeout < 100) {
+            if (lefTimeout <= 20) {
                 unLock(key, owner);
                 break;
             }
@@ -58,10 +58,9 @@ public class JedisDislock implements Lock {
     }
 
     public void unLock(String key, String owner) {
-        String v = jStrings.get(key);
-        if (v != null && v.equals(owner)) {
-            LOGGER.info("start to unLock, key:{}, owner:{}", key, owner);
-            jStrings.del(key);
+        if (key != null) {
+            boolean ret = jStrings.delEqValue(key, owner);
+            LOGGER.info("finish unLock, key:{}, owner:{}, ret:{}", key, owner, ret);
         }
     }
 

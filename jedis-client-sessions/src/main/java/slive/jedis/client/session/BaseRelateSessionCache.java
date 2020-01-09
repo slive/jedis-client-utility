@@ -57,7 +57,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
 
             SessionFKey fk = field.getAnnotation(SessionFKey.class);
             if (fk != null) {
-                vaildType(fClazz, fName);
+                vaildFkType(fClazz, fName);
                 String fPrefix = convertFinalFPrefix(prefix, fName);
                 if (!fSessionCaches.containsKey(fPrefix)) {
                     Method getMethod = fetchGetMethod(clazz, fName);
@@ -117,6 +117,17 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         }
     }
 
+    private static void vaildFkType(Class<?> clazz, String fName) {
+        // 集合等类型，必须是key或者值是String
+        if (ClassUtils.isAnyCollectionType(clazz) || ClassUtils.isMapType(clazz) || ClassUtils.isArrayType(clazz)) {
+            clazz = ClassUtils.getComponentType(clazz);
+        }
+
+        if (!(ClassUtils.isStringType(clazz))) {
+            throw new RuntimeException("SessionKey field:" + fName + " must be [String] type.");
+        }
+    }
+
     @Override
     public boolean put(String key, T value) {
         T oldObj = getObj(key);
@@ -126,6 +137,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         for (Map.Entry<String, FSessionCache> fsce : fSessionCaches.entrySet()) {
             FSessionCache fsc = fsce.getValue();
             try {
+                // TODO 数组的情况需要处理
                 Method method = fsc.getMethod();
                 Object fV = null;
                 // 若有旧的值，则先删除

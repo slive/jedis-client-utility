@@ -1,5 +1,6 @@
 package slive.jedis.client.session;
 
+import java.lang.reflect.*;
 import java.util.*;
 
 /**
@@ -146,6 +147,34 @@ public class ClassUtils {
      */
     public static boolean isMapType(Class<?> clazz) {
         return MAP_CLASS.isAssignableFrom(clazz);
+    }
+
+    public static Class<?> getComponentType(Type gType) {
+        if (gType instanceof Class) {
+            Class<?> clazz = (Class<?>) gType;
+            if (isArrayType(clazz)) {
+                return clazz.getComponentType();
+            }
+        }
+        if (gType != null) {
+            if (gType instanceof ParameterizedType) {
+                Type[] ctgs = ((ParameterizedType) gType).getActualTypeArguments();
+                if (ctgs.length > 0) {
+                    // collection，map等，只取最后一个参数
+                    return (Class<?>) ctgs[ctgs.length - 1];
+                }
+            }
+            else if (gType instanceof WildcardType) {
+                return (Class<?>) ((WildcardType) gType).getUpperBounds()[0];
+            }
+            else if (gType instanceof GenericArrayType) {
+                return (Class<?>) ((GenericArrayType) gType).getGenericComponentType();
+            }
+            else if (gType instanceof TypeVariable) {
+                return (Class<?>) ((TypeVariable) gType).getBounds()[0];
+            }
+        }
+        return Object.class;
     }
 
     /**

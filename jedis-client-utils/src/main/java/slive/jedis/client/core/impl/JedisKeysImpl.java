@@ -39,7 +39,7 @@ public class JedisKeysImpl implements JedisKeys {
         this.jedis = jedis;
     }
 
-    public JedisKeysImpl(){
+    public JedisKeysImpl() {
 
     }
 
@@ -210,4 +210,29 @@ public class JedisKeysImpl implements JedisKeys {
         return ValueType.getType(jedis.type(key));
     }
 
+    /**
+     * 当值相等时删除
+     * @param key
+     * @param value
+     */
+    public boolean delEqValue(String key, String value){
+        if(key == null || value == null){
+            return false;
+        }
+        String script =
+                "if redis.call(\"get\",KEYS[1]) == ARGV[1]\n"
+                        + "then\n"
+                        + "    return redis.call(\"del\",KEYS[1])\n"
+                        + "else\n"
+                        + "    return 0\n" + "end";
+        Object eval = jedis.eval(script, 1, key, value);
+        if(eval != null){
+            if(eval instanceof Number){
+                return RET_FAIL_INT != ((Number)eval).intValue();
+            }else{
+                return RET_OK_STR.equals(eval);
+            }
+        }
+        return false;
+    }
 }

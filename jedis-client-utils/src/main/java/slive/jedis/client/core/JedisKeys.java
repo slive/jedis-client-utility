@@ -115,4 +115,11 @@ public interface JedisKeys {
      */
     ValueType type(String key);
 
+    /**
+     * 当值相等时删除
+     * @param key
+     * @param value
+     */
+    boolean delEqValue(String key, String value);
+
 }

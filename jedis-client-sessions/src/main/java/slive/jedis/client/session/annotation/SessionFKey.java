@@ -12,5 +12,9 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
 public @interface SessionFKey {
-
+    /**
+     * 自定义字段名称，默认为空
+     * @return
+     */
+    String value() default "";
 }
