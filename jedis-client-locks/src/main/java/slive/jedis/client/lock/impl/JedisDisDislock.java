@@ -37,7 +37,7 @@ public class JedisDisDislock implements Lock {
             // 等待下一次循环
             if (!ret) {
                 try {
-                    Thread.sleep(Math.round((System.currentTimeMillis() - sleepTime) * 0.5 + 20));
+                    Thread.sleep(Math.round((System.currentTimeMillis() - sleepTime) * 0.5 + 50));
                 }
                 catch (InterruptedException e) {
                     // ignore
@@ -46,7 +46,7 @@ public class JedisDisDislock implements Lock {
 
             // 计算剩余时间，如果剩余时间太短，可能没必提供锁
             lefTimeout = (lefTimeout - (System.currentTimeMillis() - startTime));
-            if (lefTimeout <= 20) {
+            if (lefTimeout <= 2) {
                 unLock(key, owner);
                 break;
             }

@@ -57,9 +57,9 @@ public interface SessionCache<T> {
 
     /**
      * 删除值
-     * @param key 主键
+     * @param keys 主键
      */
-    void remove(String key);
+    void remove(String... keys);
 
     /**
      * 延长某个值的超时时间{@link #getTimeout()}s

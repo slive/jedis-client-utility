@@ -7,6 +7,7 @@ import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import slive.jedis.client.session.annotation.SessionCategory;
 import slive.jedis.client.session.annotation.SessionFKey;
 import slive.jedis.client.session.annotation.SessionKey;
@@ -23,9 +24,17 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
     /** logger */
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseRelateSessionCache.class);
 
+    private static final int PUT_ACTION = 1;
+
+    private static final int REMOVE_ACTION = 2;
+
+    private static final int UPDATE_ACTION = 3;
+
     private Map<String, FSessionCache> fSessionCaches = new HashMap<>();
 
     private Map<String, CategorySessionCache> categorys = new HashMap<>();
+
+    private boolean isRelate;
 
     private Method sessionKeyMethod;
 
@@ -76,6 +85,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                 CategorySessionCache csc = new CategorySessionCache(prefix, getTimeout(), field, getMethod);
                 categorys.put(csc.getCategoryName(), csc);
             }
+            isRelate = !(categorys.isEmpty() && fSessionCaches.isEmpty());
         }
     }
 
@@ -130,9 +140,19 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
 
     @Override
     public boolean put(String key, T value) {
-        T oldObj = getObj(key);
-        LOGGER.info("oldvalue:{}", oldObj);
-        super.put(key, value);
+        if (isRelate) {
+            T oldObj = getObj(key);
+            LOGGER.info("oldvalue:{}", oldObj);
+            boolean ret = super.put(key, value);
+            if (ret) {
+                handle(key, value, oldObj, PUT_ACTION);
+            }
+            return ret;
+        }
+        return super.put(key, value);
+    }
+
+    private void handle(String key, T value, T oldObj, int handleAction) {
         // 处理外键
         for (Map.Entry<String, FSessionCache> fsce : fSessionCaches.entrySet()) {
             FSessionCache fsc = fsce.getValue();
@@ -140,17 +160,38 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                 // TODO 数组的情况需要处理
                 Method method = fsc.getMethod();
                 Object fV = null;
-                // 若有旧的值，则先删除
                 if (oldObj != null) {
-                    fV = method.invoke(value, null);
+                    // 若有旧的值，则先删除
+                    fV = method.invoke(oldObj, null);
                     if (fV != null) {
-                        fsc.remove(fV.toString());
+                        String[] fvs = fetchFKeys(fV);
+                        if (fvs != null) {
+                            fsc.remove(fvs);
+                        }
+                        else {
+                            fsc.remove(fV.toString());
+                        }
                     }
                 }
-                // 更新新的值
-                fV = method.invoke(value, null);
-                if (fV != null) {
-                    fsc.put(fV.toString(), key);
+                if (value != null) {
+                    // 更新新的值
+                    fV = method.invoke(value, null);
+                    if (fV != null) {
+                        String[] fvs = fetchFKeys(fV);
+                        if (handleAction == PUT_ACTION) {
+                            for (String newFkey : fvs) {
+                                fsc.put(newFkey, key);
+                            }
+                        }
+                        else if (handleAction == REMOVE_ACTION) {
+                            fsc.remove(fvs);
+                        }
+                        else {
+                            for (String newFkey : fvs) {
+                                fsc.expire(newFkey);
+                            }
+                        }
+                    }
                 }
             }
             catch (IllegalAccessException e) {
@@ -166,16 +207,30 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                 Method method = csc.getMethod();
                 Object fV = null;
                 // 若有旧的值，则先删除
+                String fkey = null;
                 if (oldObj != null) {
-                    fV = method.invoke(value, null);
+                    fV = method.invoke(oldObj, null);
                     if (fV != null) {
-                        csc.remove(fV.toString(), key);
+                        fkey = fV.toString();
+                        csc.remove(fkey, key);
                     }
                 }
-                // 更新新的值
-                fV = method.invoke(value, null);
-                if (fV != null) {
-                    csc.put(fV.toString(), key);
+
+                if (value != null) {
+                    // 更新新的值
+                    fV = method.invoke(value, null);
+                    if (fV != null) {
+                        fkey = fV.toString();
+                        if (handleAction == PUT_ACTION) {
+                            csc.put(fkey, key);
+                        }
+                        else if (handleAction == REMOVE_ACTION) {
+                            csc.remove(fkey, key);
+                        }
+                        else {
+                            csc.expire(fkey);
+                        }
+                    }
                 }
             }
             catch (IllegalAccessException e) {
@@ -185,14 +240,45 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                 e.printStackTrace();
             }
         }
+    }
 
-        return true;
+    private String[] fetchFKeys(Object fV) {
+        String[] fvs = null;
+        Class<?> fvClass = fV.getClass();
+        if (ClassUtils.isArrayType(fvClass)) {
+            fvs = (String[]) fV;
+        }
+        else if (ClassUtils.isMapType(fvClass)) {
+            Set<String> fkSet = ((Map<String, Object>) fV).keySet();
+            fvs = new String[fkSet.size()];
+            fkSet.toArray(fvs);
+        }
+        else if (ClassUtils.isCollectionType(fvClass)) {
+            Collection<String> fkSet = ((Collection<String>) fV);
+            fvs = new String[fkSet.size()];
+            fkSet.toArray(fvs);
+        }
+        return fvs;
     }
 
     @Override
-    public void remove(String key) {
-        super.remove(key);
-        ///
+    public void remove(String... keys) {
+        if (keys != null) {
+            for (String key : keys) {
+                T obj = getObj(key);
+                handle(key, null, obj, REMOVE_ACTION);
+            }
+        }
+        super.remove(keys);
+    }
+
+    @Override
+    public boolean expire(String key) {
+        if (key != null) {
+            T obj = getObj(key);
+            handle(key, null, obj, UPDATE_ACTION);
+        }
+        return super.expire(key);
     }
 
     @Override
@@ -289,6 +375,11 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         public void remove(String key, String value) {
             key = convertFinalCategoryKey(prefix, key);
             JedisUtils.SortSets.zrem(key, value);
+            JedisUtils.SortSets.expire(key, timeout);
+        }
+
+        public void expire(String key) {
+            key = convertFinalCategoryKey(prefix, key);
             JedisUtils.SortSets.expire(key, timeout);
         }
 

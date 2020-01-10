@@ -82,8 +82,7 @@ public class BaseSessionCache<T> implements SessionCache<T> {
 
     @Override
     public boolean put(String key, T value) {
-        String finalKey = convertFinalKey(key);
-        return JedisUtils.Strings.setex(finalKey, timeout, value);
+        return put(key, value, timeout);
     }
 
     @Override
@@ -96,9 +95,14 @@ public class BaseSessionCache<T> implements SessionCache<T> {
     }
 
     @Override
-    public void remove(String key) {
-        String finalKey = convertFinalKey(key);
-        JedisUtils.Strings.del(finalKey);
+    public void remove(String... keys) {
+        if(keys != null){
+            List<String> keyList = new ArrayList<>();
+            for (String key : keys) {
+                keyList.add(convertFinalKey(key));
+            }
+        JedisUtils.Strings.del(keyList.toArray(new String[keyList.size()]));
+        }
     }
 
     @Override
