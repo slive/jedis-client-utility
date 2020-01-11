@@ -1,6 +1,5 @@
 package slive.jedis.client.session;
 
-import com.sun.javafx.font.t2k.T2KFactory;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +27,7 @@ public class BaseRelateSessionCacheTest {
     @org.junit.Before
     public void setUp() throws Exception {
         try {
-            jedis = new Jedis("192.168.235.203", 6379);
+            jedis = new Jedis("192.168.235.210", 6379);
             jedis.connect();
             JedisUtils.init(jedis);
             LOGGER.info("init sessioncache");
@@ -65,9 +64,13 @@ public class BaseRelateSessionCacheTest {
         ts.setfKey("433222");
         ts.setType("111");
         ts.setValue("3432222");
+        ts.setfKeys(new String[]{ "666", "33"});
         baseSessionCache.put(ts);
         Object retByCategory = baseSessionCache.getByCategory("type", ts.getType());
         LOGGER.info("retByCategory:{}", JSON.toJSONString(retByCategory));
+
+        retByFkey = baseSessionCache.getByFKey("fKeys", ts.getfKeys()[1]);
+        LOGGER.info("retByFkeys:{}", JSON.toJSONString(retByFkey));
 
     }
 

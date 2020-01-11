@@ -27,6 +27,9 @@ public class TestRelateSession {
     private String type;
 
     @SessionFKey
+    private String[] fKeys;
+
+    @SessionFKey
     private String fKey;
 
     public String getKey() {
@@ -75,5 +78,13 @@ public class TestRelateSession {
 
     public void setfKey(String fKey) {
         this.fKey = fKey;
+    }
+
+    public String[] getfKeys() {
+        return fKeys;
+    }
+
+    public void setfKeys(String[] fKeys) {
+        this.fKeys = fKeys;
     }
 }

@@ -257,6 +257,8 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
             Collection<String> fkSet = ((Collection<String>) fV);
             fvs = new String[fkSet.size()];
             fkSet.toArray(fvs);
+        }else{
+            fvs = new String[]{fV.toString()};
         }
         return fvs;
     }
