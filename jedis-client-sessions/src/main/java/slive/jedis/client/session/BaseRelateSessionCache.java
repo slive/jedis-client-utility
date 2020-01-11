@@ -92,6 +92,9 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                 CategorySessionCache csc = new CategorySessionCache(prefix, getTimeout(), categoryName, getMethod);
                 categorys.put(csc.getCategoryName(), csc);
             }
+            if (sessionKeyMethod == null) {
+                throw new RuntimeException("SessionKey is null.");
+            }
             isRelate = !(categorys.isEmpty() && fSessionCaches.isEmpty());
         }
     }
@@ -103,7 +106,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         String readMethodName = "get" + nFName;
         Method gMethod = null;
         try {
-            gMethod = clazz.getMethod(readMethodName, null);
+            gMethod = clazz.getMethod(readMethodName);
         }
         catch (NoSuchMethodException e) {
             // ignore
@@ -112,7 +115,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         try {
             if (gMethod == null) {
                 readMethodName = "get" + fName;
-                gMethod = clazz.getMethod(readMethodName, null);
+                gMethod = clazz.getMethod(readMethodName);
             }
         }
         catch (NoSuchMethodException e) {
@@ -166,20 +169,22 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
             }
             return ret;
         }
-        return super.put(key, value);
+        else {
+            return super.put(key, value);
+        }
     }
 
     private void handle(String key, T value, T oldObj, int handleAction) {
         // 处理外键
-        for (Map.Entry<String, FSessionCache> fsce : fSessionCaches.entrySet()) {
-            FSessionCache fsc = fsce.getValue();
-            try {
+        try {
+            for (Map.Entry<String, FSessionCache> fsce : fSessionCaches.entrySet()) {
+                FSessionCache fsc = fsce.getValue();
                 // TODO 数组的情况需要处理
                 Method method = fsc.getMethod();
                 Object fV = null;
                 if (oldObj != null) {
                     // 若有旧的值，则先删除
-                    fV = method.invoke(oldObj, null);
+                    fV = method.invoke(oldObj);
                     if (fV != null) {
                         String[] fvs = fetchFKeys(fV);
                         if (fvs != null) {
@@ -192,7 +197,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                 }
                 if (value != null) {
                     // 更新新的值
-                    fV = method.invoke(value, null);
+                    fV = method.invoke(value);
                     if (fV != null) {
                         String[] fvs = fetchFKeys(fV);
                         if (handleAction == PUT_ACTION) {
@@ -211,16 +216,13 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                     }
                 }
             }
-            catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-            catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
+        }
+        catch (Exception e) {
+            LOGGER.error("fkey handle error.", e);
         }
 
-        for (CategorySessionCache csc : categorys.values()) {
-            try {
+        try {
+            for (CategorySessionCache csc : categorys.values()) {
                 Method method = csc.getMethod();
                 Object fV = null;
                 // 若有旧的值，则先删除
@@ -250,12 +252,9 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                     }
                 }
             }
-            catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-            catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
+        }
+        catch (Exception e) {
+            LOGGER.error("category handle error.", e);
         }
     }
 
@@ -283,7 +282,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
 
     @Override
     public void remove(String... keys) {
-        if (keys != null) {
+        if (keys != null && isRelate) {
             for (String key : keys) {
                 T obj = getObj(key);
                 handle(key, null, obj, REMOVE_ACTION);
@@ -294,7 +293,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
 
     @Override
     public boolean expire(String key) {
-        if (key != null) {
+        if (key != null && isRelate) {
             T obj = getObj(key);
             handle(key, null, obj, UPDATE_ACTION);
         }
@@ -302,30 +301,41 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
     }
 
     @Override
-    public T getByFKey(String fName, String fkVal) {
-        String key = fSessionCaches.get(convertFinalFPrefix(prefix, fName)).getObj(fkVal);
+    public T getByFKey(String fkName, String fkVal) {
+        FSessionCache fSessionCache = fSessionCaches.get(convertFinalFPrefix(prefix, fkName));
+        if (fSessionCache == null) {
+            LOGGER.warn("FSessionCache is null, fkName:{}", fkName);
+        }
+
+        String key = fSessionCache.getObj(fkVal);
         return getObj(key);
     }
 
     @Override
     public boolean put(T value) {
         try {
-            Object key = sessionKeyMethod.invoke(value, null);
+            Object key = sessionKeyMethod.invoke(value);
             LOGGER.info("key:{}", key);
+            if (key == null) {
+                return false;
+            }
             return put(key.toString(), value);
         }
-        catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        catch (InvocationTargetException e) {
-            e.printStackTrace();
+        catch (Exception e) {
+            LOGGER.error("put value error:", e);
         }
         return false;
     }
 
     @Override
     public List<T> getByCategory(String categoryName, String cVal) {
-        Set<String> keys = categorys.get(convertFinalCategoryName(prefix, categoryName)).get(cVal);
+        CategorySessionCache css = categorys.get(convertFinalCategoryName(prefix, categoryName));
+        if (css == null) {
+            LOGGER.warn("CategorySessionCache is null, categoryName:{}", categoryName);
+            return null;
+        }
+
+        Set<String> keys = css.get(cVal);
         if (keys == null || keys.isEmpty()) {
             return null;
         }
@@ -333,8 +343,12 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
     }
 
     @Override
-    public boolean expireByFKey(String fName, String fkey) {
-        String key = fSessionCaches.get(convertFinalFPrefix(prefix, fName)).getObj(fkey);
+    public boolean expireByFKey(String fkName, String fkey) {
+        FSessionCache fSessionCache = fSessionCaches.get(convertFinalFPrefix(prefix, fkName));
+        if (fSessionCache == null) {
+            LOGGER.warn("FSessionCache is null, fkName:{}", fkName);
+        }
+        String key = fSessionCache.getObj(fkey);
         return expire(key);
     }
 
