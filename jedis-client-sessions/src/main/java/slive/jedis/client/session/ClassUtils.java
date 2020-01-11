@@ -149,6 +149,11 @@ public class ClassUtils {
         return MAP_CLASS.isAssignableFrom(clazz);
     }
 
+    /**
+     * 获取类里的组件类型，如果是多个取第一个
+     * @param gType 类类型
+     * @return
+     */
     public static Class<?> getComponentType(Type gType) {
         if (gType instanceof Class) {
             Class<?> clazz = (Class<?>) gType;
@@ -165,9 +170,11 @@ public class ClassUtils {
                 }
             }
             else if (gType instanceof WildcardType) {
+                // 通配符类型
                 return (Class<?>) ((WildcardType) gType).getUpperBounds()[0];
             }
             else if (gType instanceof GenericArrayType) {
+                // 数组类型
                 return (Class<?>) ((GenericArrayType) gType).getGenericComponentType();
             }
             else if (gType instanceof TypeVariable) {

@@ -1,5 +1,6 @@
 package slive.jedis.client.session;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,12 +65,13 @@ public class BaseRelateSessionCacheTest {
         ts.setfKey("433222");
         ts.setType("111");
         ts.setValue("3432222");
-        ts.setfKeys(new String[]{ "666", "33"});
+        ts.setfKeys(new String[]{ "666", "111"});
         baseSessionCache.put(ts);
-        Object retByCategory = baseSessionCache.getByCategory("type", ts.getType());
+        Object retByCategory = baseSessionCache.getByCategory("t", ts.getType());
         LOGGER.info("retByCategory:{}", JSON.toJSONString(retByCategory));
 
         retByFkey = baseSessionCache.getByFKey("fKeys", ts.getfKeys()[1]);
+        Assert.assertNotNull(retByFkey);
         LOGGER.info("retByFkeys:{}", JSON.toJSONString(retByFkey));
 
     }

@@ -23,7 +23,7 @@ public class TestRelateSession {
 
     private Date date;
 
-    @SessionCategory
+    @SessionCategory("t")
     private String type;
 
     @SessionFKey

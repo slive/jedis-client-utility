@@ -18,10 +18,19 @@ public class BaseSessionCache<T> implements SessionCache<T> {
 
     private static final Map<String, BaseSessionCache> CACHE_MAP = new HashMap<String, BaseSessionCache>();
 
+    /**
+     * 默认超时时间，单位s
+     */
     private int timeout;
 
+    /**
+     * 模块前缀，用于标识
+     */
     protected String prefix;
 
+    /**
+     * 会话类型
+     */
     protected Class<T> clazz;
 
     public BaseSessionCache(String prefix, int secondTimeout, Class<T> clazz) {
@@ -96,19 +105,18 @@ public class BaseSessionCache<T> implements SessionCache<T> {
 
     @Override
     public void remove(String... keys) {
-        if(keys != null){
+        if (keys != null) {
             List<String> keyList = new ArrayList<>();
             for (String key : keys) {
                 keyList.add(convertFinalKey(key));
             }
-        JedisUtils.Strings.del(keyList.toArray(new String[keyList.size()]));
+            JedisUtils.Strings.del(keyList.toArray(new String[keyList.size()]));
         }
     }
 
     @Override
     public boolean expire(String key) {
-        String finalKey = convertFinalKey(key);
-        return JedisUtils.Strings.expire(finalKey, timeout);
+        return expire(key, timeout);
     }
 
     @Override

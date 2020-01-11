@@ -15,6 +15,9 @@ import slive.jedis.client.util.JedisUtils;
 
 /**
  * 描述：<br>
+ * 基本的关联会话缓存类，主要实现功能包括： 基于主键的加入，更新，删除和会话延长等。 支持基于外键{@link SessionFKey}或者分类{@link SessionCategory}查询
+ *
+ * <i>注意：所有操作不具有原子性，可能存在数据同步问题。</i>
  *
  * @author slive
  * @date 2020/1/5
@@ -43,9 +46,8 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
     public BaseRelateSessionCache(String prefix, int secondTimeout, Class<T> clazz) {
         super(prefix, secondTimeout, clazz);
         // 要求必须有一个主键
-        // 可以有N个外键1:1
-        // 可以有M个分类键，1:m
-        // 做排序？
+        // 可以有N个外键，每个外键和主键关系为：1:1
+        // 可以有M个分类键，每个外键和主键关系为：1:m
         Field[] fields = clazz.getDeclaredFields();
         for (int index = 0; index < fields.length; index++) {
             Field field = fields[index];
@@ -54,20 +56,23 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
             SessionKey sk = field.getAnnotation(SessionKey.class);
             if (sk != null) {
                 vaildType(fClazz, fName);
+                // 主键只能一个
                 if (sessionKeyField != null) {
                     throw new RuntimeException("SessionKey has existed, the field:" + fName);
                 }
                 else {
                     sessionKeyField = field;
                     sessionKeyMethod = fetchGetMethod(clazz, fName);
+                    // 主键不能做外键
                     continue;
                 }
             }
 
+            // 初始化外键
             SessionFKey fk = field.getAnnotation(SessionFKey.class);
             if (fk != null) {
                 vaildFkType(fClazz, fName);
-                String fPrefix = convertFinalFPrefix(prefix, fName);
+                String fPrefix = convertFinalFPrefix(prefix, fk, fName);
                 if (!fSessionCaches.containsKey(fPrefix)) {
                     Method getMethod = fetchGetMethod(clazz, fName);
                     FSessionCache fbs = new FSessionCache(fPrefix, secondTimeout, field, getMethod);
@@ -78,47 +83,59 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                 }
             }
 
+            // 初始化分类
             SessionCategory sc = field.getAnnotation(SessionCategory.class);
             if (sc != null) {
                 vaildType(fClazz, fName);
                 Method getMethod = fetchGetMethod(clazz, fName);
-                CategorySessionCache csc = new CategorySessionCache(prefix, getTimeout(), field, getMethod);
+                String categoryName = convertFinalCategoryName(prefix, sc, fName);
+                CategorySessionCache csc = new CategorySessionCache(prefix, getTimeout(), categoryName, getMethod);
                 categorys.put(csc.getCategoryName(), csc);
             }
             isRelate = !(categorys.isEmpty() && fSessionCaches.isEmpty());
         }
     }
 
-    private Method fetchGetMethod(Class<T> clazz, String fName) {
+    private static Method fetchGetMethod(Class<?> clazz, String fName) {
         String first = fName.substring(0, 1);
         String firstUpperFName = first.toUpperCase();
         String nFName = fName.replaceFirst(first, firstUpperFName);
         String readMethodName = "get" + nFName;
-        Method getMethod = null;
+        Method gMethod = null;
         try {
-            getMethod = clazz.getMethod(readMethodName, null);
+            gMethod = clazz.getMethod(readMethodName, null);
         }
         catch (NoSuchMethodException e) {
-            e.printStackTrace();
+            // ignore
+            LOGGER.warn("method can not found1:{}", readMethodName);
         }
         try {
-            if (getMethod == null) {
+            if (gMethod == null) {
                 readMethodName = "get" + fName;
-                getMethod = clazz.getMethod(readMethodName, null);
+                gMethod = clazz.getMethod(readMethodName, null);
             }
         }
         catch (NoSuchMethodException e) {
-            e.printStackTrace();
+            // ignore
+            LOGGER.warn("method can not found2:{}", readMethodName);
         }
-        if (getMethod == null) {
+        if (gMethod == null) {
             throw new RuntimeException(readMethodName + " has not existed.");
         }
-        LOGGER.info("method:{}", getMethod);
-        return getMethod;
+        LOGGER.info("method:{}", gMethod);
+        return gMethod;
     }
 
-    private static String convertFinalFPrefix(String prefix, String fName) {
-        return prefix + "#fk#" + fName;
+    private static String convertFinalFPrefix(String prefix, SessionFKey fk, String fName) {
+        String fkName = fk.value();
+        if (fkName == null || fkName.equals("")) {
+            fkName = fName;
+        }
+        return prefix + "#fk#" + fkName;
+    }
+
+    private static String convertFinalFPrefix(String prefix, String fkName) {
+        return prefix + "#fk#" + fkName;
     }
 
     private static void vaildType(Class<?> clazz, String fName) {
@@ -257,8 +274,9 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
             Collection<String> fkSet = ((Collection<String>) fV);
             fvs = new String[fkSet.size()];
             fkSet.toArray(fvs);
-        }else{
-            fvs = new String[]{fV.toString()};
+        }
+        else {
+            fvs = new String[] { fV.toString() };
         }
         return fvs;
     }
@@ -284,8 +302,8 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
     }
 
     @Override
-    public T getByFKey(String fkName, String fkVal) {
-        String key = fSessionCaches.get(convertFinalFPrefix(prefix, fkName)).getObj(fkVal);
+    public T getByFKey(String fName, String fkVal) {
+        String key = fSessionCaches.get(convertFinalFPrefix(prefix, fName)).getObj(fkVal);
         return getObj(key);
     }
 
@@ -306,12 +324,18 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
     }
 
     @Override
-    public List<T> getByCategory(String cName, String cVal) {
-        Set<String> keys = categorys.get(convertFinalCategoryName(prefix, cName)).get(cVal);
+    public List<T> getByCategory(String categoryName, String cVal) {
+        Set<String> keys = categorys.get(convertFinalCategoryName(prefix, categoryName)).get(cVal);
         if (keys == null || keys.isEmpty()) {
             return null;
         }
         return getObjs(keys.toArray(new String[keys.size()]));
+    }
+
+    @Override
+    public boolean expireByFKey(String fName, String fkey) {
+        String key = fSessionCaches.get(convertFinalFPrefix(prefix, fName)).getObj(fkey);
+        return expire(key);
     }
 
     class FSessionCache extends BaseSessionCache<String> {
@@ -339,25 +363,17 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
 
         private String prefix;
 
-        private Field field;
-
         private Method method;
 
         private String categoryName;
 
         private int timeout;
 
-        public CategorySessionCache(String prefix, int secondTimeout, Field field, Method method) {
-            this.field = field;
+        public CategorySessionCache(String prefix, int secondTimeout, String categoryName, Method method) {
             this.method = method;
             this.prefix = prefix;
-            String cName = field.getName();
-            this.categoryName = convertFinalCategoryName(prefix, cName);
+            this.categoryName = categoryName;
             this.timeout = secondTimeout;
-        }
-
-        public Field getField() {
-            return field;
         }
 
         public Method getMethod() {
@@ -401,8 +417,16 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
 
     }
 
-    private static String convertFinalCategoryName(String prefix, String cName) {
-        return prefix + "#cs#" + cName;
+    private static String convertFinalCategoryName(String prefix, SessionCategory sc, String fName) {
+        String scName = sc.value();
+        if (scName == null || scName.equals("")) {
+            scName = fName;
+        }
+        return prefix + "#cs#" + scName;
+    }
+
+    private static String convertFinalCategoryName(String prefix, String scName) {
+        return prefix + "#cs#" + scName;
     }
 
     private static String convertFinalCategoryKey(String prefix, String key) {
