@@ -9,8 +9,11 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <name>jedis-client-sessions</name>
     <artifactId>jedis-client-sessions</artifactId>
-    <version>jar</version>
+    <version>${version}</version>
+    <packaging>jar</packaging>
+
     <build>
         <plugins>
             <plugin>

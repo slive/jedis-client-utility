@@ -11,6 +11,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <version>1.0.0</version>
     </properties>
 
     <dependencyManagement>
@@ -49,6 +50,7 @@
         <module>jedis-client-utils</module>
         <module>jedis-client-locks</module>
         <module>jedis-client-sessions</module>
+        <module>jedis-client-transactions</module>
     </modules>
 
 </project>

@@ -9,7 +9,9 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <name>jedis-client-locks</name>
     <artifactId>jedis-client-locks</artifactId>
+    <version>${version}</version>
     <packaging>jar</packaging>
 
     <dependencies>

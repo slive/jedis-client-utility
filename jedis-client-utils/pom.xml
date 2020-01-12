@@ -11,6 +11,7 @@
 
     <name>jedis-client-utils</name>
     <artifactId>jedis-client-utils</artifactId>
+    <version>${version}</version>
     <packaging>jar</packaging>
 
     <dependencies>

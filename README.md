@@ -9,3 +9,6 @@
     
 ## jedis-client-sessions
     基于jedis开发的会话共享。
+
+## jedis-client-transactions
+    基于jedis开发的分布式事务。
