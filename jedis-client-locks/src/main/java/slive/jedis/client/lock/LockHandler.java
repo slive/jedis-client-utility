@@ -10,6 +10,12 @@ package slive.jedis.client.lock;
 public interface LockHandler {
 
     /**
+     * 在开始获取锁操作之前
+     * @param context 操作上下文
+     */
+    void beforeHandle(LockExecutorContext context);
+
+    /**
      * 获得锁后的操作
      * @param context 操作上下文
      * @return 返回结果
@@ -33,5 +39,5 @@ public interface LockHandler {
      * 释放锁后的操作
      * @param context 操作上下文
      */
-    void onFinally(LockExecutorContext context);
+    void afterHandle(LockExecutorContext context);
 }

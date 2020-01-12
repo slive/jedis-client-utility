@@ -169,10 +169,10 @@ public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
             }
 
             try {
-                handler.onFinally(context);
+                handler.afterHandle(context);
             }
             catch (Exception e) {
-                LOGGER.error("execute onFinally exception:{}", e);
+                LOGGER.error("execute afterHandle exception:{}", e);
             }
             context.setEndTime();
         }

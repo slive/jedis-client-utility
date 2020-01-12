@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import redis.clients.jedis.Jedis;
-import slive.jedis.client.lock.impl.JedisDisDislock;
+import slive.jedis.client.lock.impl.JedisDistlock;
 import slive.jedis.client.util.JedisUtils;
 
 /**
@@ -40,7 +40,7 @@ public class BaseLockExecutorTest {
         jedis.connect();
         JedisUtils.init(jedis);
         atomicLong = new AtomicLong();
-        execute = new BaseLockExecutor("test", 5000, new JedisDisDislock());
+        execute = new BaseLockExecutor("test", 5000, new JedisDistlock());
         LOGGER.info("[{}] init...", getDataStr());
         LOGGER.info("--------------------------------------------------------------------------\r\n");
     }
@@ -137,8 +137,8 @@ public class BaseLockExecutorTest {
             }
 
             @Override
-            public void onFinally(LockExecutorContext context) {
-                super.onFinally(context);
+            public void afterHandle(LockExecutorContext context) {
+                super.afterHandle(context);
                 countDownLatch.countDown();
             }
         });

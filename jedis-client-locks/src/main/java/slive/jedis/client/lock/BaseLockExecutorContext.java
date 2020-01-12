@@ -1,5 +1,8 @@
 package slive.jedis.client.lock;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 描述：<br>
  * 通用实现的基本的锁执行器上下文
@@ -10,6 +13,8 @@ package slive.jedis.client.lock;
 public class BaseLockExecutorContext implements LockExecutorContext {
 
     private static final String CLASS_NAME = BaseLockExecutorContext.class.getSimpleName();
+
+    private Map<String, Object> attaches = new HashMap<String, Object>();
 
     private String key;
 
@@ -143,6 +148,28 @@ public class BaseLockExecutorContext implements LockExecutorContext {
     BaseLockExecutorContext setResult(Object result) {
         this.result = result;
         return this;
+    }
+
+    /**
+     * 设置变量以便上下文使用
+     * @param key 变量key
+     * @param val 变量值
+     * @param <T> 参数类型
+     */
+    public <T> void addAttach(String key, T val) {
+        synchronized (attaches) {
+            attaches.put(key, val);
+        }
+    }
+
+    /**
+     * 获取变量
+     * @param key
+     * @param <T>
+     * @return
+     */
+    public <T extends Object> T getAttach(String key) {
+        return (T) attaches.get(key);
     }
 
     @Override

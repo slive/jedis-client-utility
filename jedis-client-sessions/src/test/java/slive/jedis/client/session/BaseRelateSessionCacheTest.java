@@ -1,6 +1,8 @@
 package slive.jedis.client.session;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +27,7 @@ public class BaseRelateSessionCacheTest {
 
     private Jedis jedis;
 
-    @org.junit.Before
+    @BeforeClass
     public void setUp() throws Exception {
         try {
             jedis = new Jedis("192.168.235.210", 6379);
@@ -76,7 +78,7 @@ public class BaseRelateSessionCacheTest {
 
     }
 
-    @org.junit.After
+    @AfterClass
     public void tearDown() throws Exception {
     }
 }

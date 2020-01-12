@@ -12,10 +12,14 @@ import slive.jedis.client.util.JedisUtils;
  * @author slive
  * @date 2020/1/1
  */
-public class JedisDisDislock implements Lock {
+public class JedisDistlock implements Lock {
 
     /** logger */
-    private static final Logger LOGGER = LoggerFactory.getLogger(JedisDisDislock.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JedisDistlock.class);
+
+    private static final long DEFAULT_WAITTIME = 50;
+
+    private static final int MIX_LEFTTIME = 2;
 
     private JedisStrings jStrings = JedisUtils.Strings;
 
@@ -37,7 +41,7 @@ public class JedisDisDislock implements Lock {
             // 等待下一次循环
             if (!ret) {
                 try {
-                    Thread.sleep(Math.round((System.currentTimeMillis() - sleepTime) * 0.5 + 50));
+                    Thread.sleep(Math.round((System.currentTimeMillis() - sleepTime) * 0.5 + DEFAULT_WAITTIME));
                 }
                 catch (InterruptedException e) {
                     // ignore
@@ -46,7 +50,7 @@ public class JedisDisDislock implements Lock {
 
             // 计算剩余时间，如果剩余时间太短，可能没必提供锁
             lefTimeout = (lefTimeout - (System.currentTimeMillis() - startTime));
-            if (lefTimeout <= 2) {
+            if (lefTimeout <= MIX_LEFTTIME) {
                 unLock(key, owner);
                 break;
             }

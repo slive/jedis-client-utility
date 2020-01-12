@@ -14,6 +14,10 @@ public abstract class BaseLockHandler implements LockHandler {
     /** logger */
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseLockHandler.class);
 
+    public void beforeHandle(LockExecutorContext context) {
+        // nothing
+    }
+
     public void onFailed(LockExecutorContext context) {
         LOGGER.warn("failed to execute, context:{}", context.toSimpleString());
     }
@@ -22,7 +26,7 @@ public abstract class BaseLockHandler implements LockHandler {
         LOGGER.error("handle error, context:{}, error:{}", context, ex);
     }
 
-    public void onFinally(LockExecutorContext context) {
+    public void afterHandle(LockExecutorContext context) {
         // nothing
     }
 }
