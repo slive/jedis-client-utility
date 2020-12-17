@@ -12,7 +12,7 @@ import java.util.List;
 
 import redis.clients.jedis.Jedis;
 import slive.jedis.client.core.JedisLists;
-import slive.jedis.client.util.PojoJsonUtils;
+import slive.jedis.client.util.JsonUtils;
 
 /**
  * 描述：redis List相关操作类，参考<b>http://www.redis.net.cn/order/"></b>
@@ -97,7 +97,7 @@ public final class JedisListsImpl extends JedisKeysImpl implements JedisLists {
         }
         String ret = lindex(key, index);
         if (ret != null) {
-            return PojoJsonUtils.convert2Object(ret, pojoClazz);
+            return JsonUtils.convert2Object(ret, pojoClazz);
         }
         return null;
     }
@@ -135,7 +135,7 @@ public final class JedisListsImpl extends JedisKeysImpl implements JedisLists {
     public <T> T lpop(String key, Class<T> pojoClazz) {
         String ret = lpop(key);
         if (ret != null) {
-            return PojoJsonUtils.convert2Object(ret, pojoClazz);
+            return JsonUtils.convert2Object(ret, pojoClazz);
         }
         return null;
     }
@@ -154,7 +154,7 @@ public final class JedisListsImpl extends JedisKeysImpl implements JedisLists {
         String[] str = new String[values.length];
         int index = 0;
         for (T t : values) {
-            str[index++] = PojoJsonUtils.convert2String(t);
+            str[index++] = JsonUtils.convert2String(t);
         }
         return jedis.lpush(key, str);
     }
@@ -173,7 +173,7 @@ public final class JedisListsImpl extends JedisKeysImpl implements JedisLists {
         String[] str = new String[values.length];
         int index = 0;
         for (T t : values) {
-            str[index++] = PojoJsonUtils.convert2String(t);
+            str[index++] = JsonUtils.convert2String(t);
         }
         return jedis.lpushx(key, str);
     }
@@ -211,7 +211,7 @@ public final class JedisListsImpl extends JedisKeysImpl implements JedisLists {
         }
         List<T> retList = new LinkedList<T>();
         for (String s : ret) {
-            retList.add(PojoJsonUtils.convert2Object(s, pojoClazz));
+            retList.add(JsonUtils.convert2Object(s, pojoClazz));
         }
         return retList;
     }
@@ -232,7 +232,7 @@ public final class JedisListsImpl extends JedisKeysImpl implements JedisLists {
         if (key == null || value == null) {
             return DEFAULT_VAL_INT;
         }
-        return jedis.lrem(key, count, PojoJsonUtils.convert2String(value));
+        return jedis.lrem(key, count, JsonUtils.convert2String(value));
     }
 
     /**
@@ -246,7 +246,7 @@ public final class JedisListsImpl extends JedisKeysImpl implements JedisLists {
         if (key == null || value == null) {
             return false;
         }
-        return RET_OK_STR.equals(jedis.lset(key, index, PojoJsonUtils.convert2String(value)));
+        return RET_OK_STR.equals(jedis.lset(key, index, JsonUtils.convert2String(value)));
     }
 
     /**
@@ -285,7 +285,7 @@ public final class JedisListsImpl extends JedisKeysImpl implements JedisLists {
     public <T> T rpop(String key, Class<T> pojoClazz) {
         String ret = rpop(key);
         if (ret != null) {
-            return PojoJsonUtils.convert2Object(ret, pojoClazz);
+            return JsonUtils.convert2Object(ret, pojoClazz);
         }
         return null;
     }
@@ -313,7 +313,7 @@ public final class JedisListsImpl extends JedisKeysImpl implements JedisLists {
     public <T> T rpoplpush(String srcKey, String dstKey, Class<T> pojoClazz) {
         String ret = rpoplpush(srcKey, dstKey);
         if (ret != null) {
-            return PojoJsonUtils.convert2Object(ret, pojoClazz);
+            return JsonUtils.convert2Object(ret, pojoClazz);
         }
         return null;
     }
@@ -332,7 +332,7 @@ public final class JedisListsImpl extends JedisKeysImpl implements JedisLists {
         String[] str = new String[values.length];
         int index = 0;
         for (T t : values) {
-            str[index++] = PojoJsonUtils.convert2String(t);
+            str[index++] = JsonUtils.convert2String(t);
         }
         return jedis.rpush(key, str);
     }
@@ -351,7 +351,7 @@ public final class JedisListsImpl extends JedisKeysImpl implements JedisLists {
         String[] str = new String[values.length];
         int index = 0;
         for (T t : values) {
-            str[index++] = PojoJsonUtils.convert2String(t);
+            str[index++] = JsonUtils.convert2String(t);
         }
         return jedis.rpushx(key, str);
     }

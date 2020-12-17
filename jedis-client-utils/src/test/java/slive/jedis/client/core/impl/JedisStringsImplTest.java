@@ -17,7 +17,7 @@ public class JedisStringsImplTest {
 
     @Before
     public void setUp() throws Exception {
-        Jedis jedis = new Jedis("192.168.235.192", 6379);
+        Jedis jedis = new Jedis("192.168.235.1", 6379);
         Strings = new JedisStringsImpl();
         Strings.initJedis(jedis);
     }

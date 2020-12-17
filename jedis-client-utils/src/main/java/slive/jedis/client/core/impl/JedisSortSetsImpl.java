@@ -12,7 +12,7 @@ import java.util.Map.Entry;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ScanResult;
 import redis.clients.jedis.Tuple;
-import slive.jedis.client.util.PojoJsonUtils;
+import slive.jedis.client.util.JsonUtils;
 import slive.jedis.client.core.JedisSortSets;
 
 /**
@@ -41,7 +41,7 @@ public final class JedisSortSetsImpl extends JedisKeysImpl implements JedisSortS
         if (key == null || member == null) {
             return DEFAULT_VAL_INT;
         }
-        String val = PojoJsonUtils.convert2String(member);
+        String val = JsonUtils.convert2String(member);
         return jedis.zadd(key, score, val);
     }
 
@@ -60,7 +60,7 @@ public final class JedisSortSetsImpl extends JedisKeysImpl implements JedisSortS
         Map<String, Double> vals = new LinkedHashMap<String, Double>(members.size());
         Set<Entry<T, Double>> entrySet = members.entrySet();
         for (Entry<T, Double> e : entrySet) {
-            vals.put(PojoJsonUtils.convert2String(e.getKey()), e.getValue());
+            vals.put(JsonUtils.convert2String(e.getKey()), e.getValue());
         }
         return jedis.zadd(key, vals);
     }
@@ -104,7 +104,7 @@ public final class JedisSortSetsImpl extends JedisKeysImpl implements JedisSortS
         if (key == null || member == null) {
             return DEFAULT_VAL_INT;
         }
-        String val = PojoJsonUtils.convert2String(member);
+        String val = JsonUtils.convert2String(member);
         return jedis.zincrby(key, score, val);
     }
 
@@ -171,7 +171,7 @@ public final class JedisSortSetsImpl extends JedisKeysImpl implements JedisSortS
         }
         Set<T> retList = new LinkedHashSet<T>(ret.size());
         for (String s : ret) {
-            retList.add(PojoJsonUtils.convert2Object(s, pojoClazz));
+            retList.add(JsonUtils.convert2Object(s, pojoClazz));
         }
         return retList;
     }
@@ -207,7 +207,7 @@ public final class JedisSortSetsImpl extends JedisKeysImpl implements JedisSortS
         }
         Set<T> retList = new LinkedHashSet<T>(ret.size());
         for (String s : ret) {
-            retList.add(PojoJsonUtils.convert2Object(s, pojoClazz));
+            retList.add(JsonUtils.convert2Object(s, pojoClazz));
         }
         return retList;
     }
@@ -243,7 +243,7 @@ public final class JedisSortSetsImpl extends JedisKeysImpl implements JedisSortS
         }
         Set<T> retList = new LinkedHashSet<T>(ret.size());
         for (String s : ret) {
-            retList.add(PojoJsonUtils.convert2Object(s, pojoClazz));
+            retList.add(JsonUtils.convert2Object(s, pojoClazz));
         }
         return retList;
     }
@@ -258,7 +258,7 @@ public final class JedisSortSetsImpl extends JedisKeysImpl implements JedisSortS
         if (key == null || member == null) {
             return DEFAULT_VAL_INT;
         }
-        Long zrank = jedis.zrank(key, PojoJsonUtils.convert2String(member));
+        Long zrank = jedis.zrank(key, JsonUtils.convert2String(member));
         return zrank != null ? zrank : DEFAULT_VAL_INT;
     }
 
@@ -276,7 +276,7 @@ public final class JedisSortSetsImpl extends JedisKeysImpl implements JedisSortS
         String[] ms = new String[members.length];
         int index = 0;
         for (T t : members) {
-            ms[index++] = PojoJsonUtils.convert2String(t);
+            ms[index++] = JsonUtils.convert2String(t);
         }
         return jedis.zrem(key, ms);
     }
@@ -355,7 +355,7 @@ public final class JedisSortSetsImpl extends JedisKeysImpl implements JedisSortS
         }
         Set<T> retList = new LinkedHashSet<T>(ret.size());
         for (String s : ret) {
-            retList.add(PojoJsonUtils.convert2Object(s, pojoClazz));
+            retList.add(JsonUtils.convert2Object(s, pojoClazz));
         }
         return retList;
     }
@@ -370,7 +370,7 @@ public final class JedisSortSetsImpl extends JedisKeysImpl implements JedisSortS
         if (key == null || member == null) {
             return null;
         }
-        Double zrank = jedis.zscore(key, PojoJsonUtils.convert2String(member));
+        Double zrank = jedis.zscore(key, JsonUtils.convert2String(member));
         return zrank != null ? zrank : DEFAULT_VAL_INT;
     }
 

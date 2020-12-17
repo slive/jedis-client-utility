@@ -14,7 +14,9 @@ import slive.jedis.client.util.JedisUtils;
  */
 public class JedisDistlock implements Lock {
 
-    /** logger */
+    /**
+     * logger
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger(JedisDistlock.class);
 
     private static final long DEFAULT_WAITTIME = 50;
@@ -42,8 +44,7 @@ public class JedisDistlock implements Lock {
             if (!ret) {
                 try {
                     Thread.sleep(Math.round((System.currentTimeMillis() - sleepTime) * 0.5 + DEFAULT_WAITTIME));
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     // ignore
                 }
             }
@@ -56,7 +57,7 @@ public class JedisDistlock implements Lock {
             }
         }
         while (!ret);
-        LOGGER.info("fiinsh tryLock, isLocked:{}, spendTime:{}, try times:{}", ret,
+        LOGGER.info("finish tryLock, isLocked:{}, spendTime:{}, try times:{}", ret,
                 (System.currentTimeMillis() - startTime), tryTimes);
         return ret;
     }

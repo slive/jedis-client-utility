@@ -11,7 +11,7 @@ import java.util.*;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ScanResult;
 import slive.jedis.client.core.JedisSets;
-import slive.jedis.client.util.PojoJsonUtils;
+import slive.jedis.client.util.JsonUtils;
 
 /**
  * 描述：redis Set相关操作类，参考<b>http://www.redis.net.cn/order/"></b>
@@ -41,7 +41,7 @@ public final class JedisSetsImpl extends JedisKeysImpl implements JedisSets {
         String[] ms = new String[members.length];
         int index = 0;
         for (T t : members) {
-            ms[index++] = PojoJsonUtils.convert2String(t);
+            ms[index++] = JsonUtils.convert2String(t);
         }
         return jedis.sadd(key, ms);
     }
@@ -83,7 +83,7 @@ public final class JedisSetsImpl extends JedisKeysImpl implements JedisSets {
         if (ret != null && !ret.isEmpty()) {
             Set<T> retSet = new HashSet<T>(ret.size());
             for (String s : ret) {
-                retSet.add(PojoJsonUtils.convert2Object(s, pojoClazz));
+                retSet.add(JsonUtils.convert2Object(s, pojoClazz));
             }
             return retSet;
         }
@@ -128,7 +128,7 @@ public final class JedisSetsImpl extends JedisKeysImpl implements JedisSets {
         if (ret != null && !ret.isEmpty()) {
             Set<T> retSet = new HashSet<T>(ret.size());
             for (String s : ret) {
-                retSet.add(PojoJsonUtils.convert2Object(s, pojoClazz));
+                retSet.add(JsonUtils.convert2Object(s, pojoClazz));
             }
             return retSet;
         }
@@ -158,7 +158,7 @@ public final class JedisSetsImpl extends JedisKeysImpl implements JedisSets {
         if (key == null || pojoMember == null) {
             return false;
         }
-        String member = PojoJsonUtils.convert2String(pojoMember);
+        String member = JsonUtils.convert2String(pojoMember);
         return jedis.sismember(key, member);
     }
 
@@ -187,7 +187,7 @@ public final class JedisSetsImpl extends JedisKeysImpl implements JedisSets {
         if (ret != null && !ret.isEmpty()) {
             Set<T> retSet = new HashSet<T>(ret.size());
             for (String s : ret) {
-                retSet.add(PojoJsonUtils.convert2Object(s, pojoClazz));
+                retSet.add(JsonUtils.convert2Object(s, pojoClazz));
             }
             return retSet;
         }
@@ -207,7 +207,7 @@ public final class JedisSetsImpl extends JedisKeysImpl implements JedisSets {
         if (srckey == null || dstkey == null || pojoMember == null) {
             return false;
         }
-        String member = PojoJsonUtils.convert2String(pojoMember);
+        String member = JsonUtils.convert2String(pojoMember);
         return RET_OK_INT == jedis.smove(srckey, dstkey, member);
     }
 
@@ -232,7 +232,7 @@ public final class JedisSetsImpl extends JedisKeysImpl implements JedisSets {
     public <T> T spop(String key, Class<T> pojoClazz) {
         String ret = spop(key);
         if (ret != null) {
-            return PojoJsonUtils.convert2Object(ret, pojoClazz);
+            return JsonUtils.convert2Object(ret, pojoClazz);
         }
         return null;
     }
@@ -258,7 +258,7 @@ public final class JedisSetsImpl extends JedisKeysImpl implements JedisSets {
     public <T> T srandmember(String key, Class<T> pojoClazz) {
         String ret = srandmember(key);
         if (ret != null) {
-            return PojoJsonUtils.convert2Object(ret, pojoClazz);
+            return JsonUtils.convert2Object(ret, pojoClazz);
         }
         return null;
     }
@@ -293,7 +293,7 @@ public final class JedisSetsImpl extends JedisKeysImpl implements JedisSets {
         if (ret != null && !ret.isEmpty()) {
             List<T> retSet = new LinkedList<T>();
             for (String s : ret) {
-                retSet.add(PojoJsonUtils.convert2Object(s, pojoClazz));
+                retSet.add(JsonUtils.convert2Object(s, pojoClazz));
             }
             return retSet;
         }
@@ -314,7 +314,7 @@ public final class JedisSetsImpl extends JedisKeysImpl implements JedisSets {
         String[] ms = new String[members.length];
         int index = 0;
         for (T t : members) {
-            ms[index++] = PojoJsonUtils.convert2String(t);
+            ms[index++] = JsonUtils.convert2String(t);
         }
         return jedis.srem(key, ms);
     }
@@ -344,7 +344,7 @@ public final class JedisSetsImpl extends JedisKeysImpl implements JedisSets {
         if (ret != null && !ret.isEmpty()) {
             Set<T> retSet = new HashSet<T>(ret.size());
             for (String s : ret) {
-                retSet.add(PojoJsonUtils.convert2Object(s, pojoClazz));
+                retSet.add(JsonUtils.convert2Object(s, pojoClazz));
             }
             return retSet;
         }

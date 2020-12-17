@@ -6,6 +6,7 @@ import java.util.*;
 /**
  * 描述：<br>
  * 类相关工具类
+ *
  * @author slive
  * @date 2020/1/6
  */
@@ -47,6 +48,7 @@ public class ClassUtils {
 
     /**
      * 是否是空类型
+     *
      * @param clazz
      * @return
      */
@@ -56,6 +58,7 @@ public class ClassUtils {
 
     /**
      * 是否是数字类型
+     *
      * @param clazz
      * @return
      */
@@ -65,6 +68,7 @@ public class ClassUtils {
 
     /**
      * 是否是布尔类型
+     *
      * @param clazz
      * @return
      */
@@ -74,6 +78,7 @@ public class ClassUtils {
 
     /**
      * 是否是原始的类型
+     *
      * @param clazz
      * @return
      * @see java.lang.Boolean#TYPE
@@ -89,32 +94,26 @@ public class ClassUtils {
     public static boolean isPrimitiveType(Class<?> clazz) {
         if (INT_CLASS.equals(clazz)) {
             return true;
-        }
-        else if (BYTE_CLASS.equals(clazz)) {
+        } else if (BYTE_CLASS.equals(clazz)) {
             return true;
-        }
-        else if (CHARACTER_CLASS.equals(clazz)) {
+        } else if (CHARACTER_CLASS.equals(clazz)) {
             return true;
-        }
-        else if (SHORT_CLASS.equals(clazz)) {
+        } else if (SHORT_CLASS.equals(clazz)) {
             return true;
-        }
-        else if (LONG_CLASS.equals(clazz)) {
+        } else if (LONG_CLASS.equals(clazz)) {
             return true;
-        }
-        else if (DOUBLE_CLASS.equals(clazz)) {
+        } else if (DOUBLE_CLASS.equals(clazz)) {
             return true;
-        }
-        else if (FLOAT_CLASS.equals(clazz)) {
+        } else if (FLOAT_CLASS.equals(clazz)) {
             return true;
-        }
-        else {
+        } else {
             return isBoolean(clazz) || isVoid(clazz);
         }
     }
 
     /**
      * 是否是字符串类型
+     *
      * @param clazz
      * @return
      */
@@ -124,6 +123,7 @@ public class ClassUtils {
 
     /**
      * 是否是简单类型，即{@link #isStringType(Class)} 和{@link #isPrimitiveType(Class)}
+     *
      * @param clazz
      * @return
      */
@@ -133,6 +133,7 @@ public class ClassUtils {
 
     /**
      * 复合类型，非简单类型{@link #isSimpleType(Class)}或者非大集合类型{@link #isAnyCollectionType(Class)}
+     *
      * @param clazz
      * @return
      */
@@ -142,6 +143,7 @@ public class ClassUtils {
 
     /**
      * 是否是Map集合类型
+     *
      * @param clazz
      * @return
      */
@@ -151,6 +153,7 @@ public class ClassUtils {
 
     /**
      * 获取类里的组件类型，如果是多个取第一个
+     *
      * @param gType 类类型
      * @return
      */
@@ -168,16 +171,13 @@ public class ClassUtils {
                     // collection，map等，只取最后一个参数
                     return (Class<?>) ctgs[ctgs.length - 1];
                 }
-            }
-            else if (gType instanceof WildcardType) {
+            } else if (gType instanceof WildcardType) {
                 // 通配符类型
                 return (Class<?>) ((WildcardType) gType).getUpperBounds()[0];
-            }
-            else if (gType instanceof GenericArrayType) {
+            } else if (gType instanceof GenericArrayType) {
                 // 数组类型
                 return (Class<?>) ((GenericArrayType) gType).getGenericComponentType();
-            }
-            else if (gType instanceof TypeVariable) {
+            } else if (gType instanceof TypeVariable) {
                 return (Class<?>) ((TypeVariable) gType).getBounds()[0];
             }
         }
@@ -186,6 +186,7 @@ public class ClassUtils {
 
     /**
      * 是否是任意集合类型，包括任意继承或者实现{@link Collection},{@link Map}类型
+     *
      * @param clazz
      * @return
      */
@@ -195,6 +196,7 @@ public class ClassUtils {
 
     /**
      * 是否是基本的java集合{@link Collection}类型
+     *
      * @param clazz
      * @return
      */
@@ -204,6 +206,7 @@ public class ClassUtils {
 
     /**
      * 是否是继承或者实现{@link List}类型
+     *
      * @param clazz
      * @return
      */
@@ -213,6 +216,7 @@ public class ClassUtils {
 
     /**
      * 是否是继承或者实现{@link Set}类型
+     *
      * @param clazz
      * @return
      */
@@ -222,6 +226,7 @@ public class ClassUtils {
 
     /**
      * 是否是继承或者实现{@link Queue}类型
+     *
      * @param clazz
      * @return
      */
@@ -231,6 +236,7 @@ public class ClassUtils {
 
     /**
      * 是否是继承或者实现{@link Vector}类型
+     *
      * @param clazz
      * @return
      */
@@ -240,6 +246,7 @@ public class ClassUtils {
 
     /**
      * 是否是数组类型
+     *
      * @param clazz
      * @return
      */

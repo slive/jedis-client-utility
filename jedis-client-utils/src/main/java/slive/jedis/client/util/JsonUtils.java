@@ -14,7 +14,7 @@ import com.alibaba.fastjson.JSON;
 /**
  * 描述：pojo对象->json字符串，json字符串->pojo对象转换
  */
-public final class PojoJsonUtils {
+public final class JsonUtils {
 
     @SuppressWarnings("unchecked")
     public static <T> T convert2Object(String value, Class<T> clazz) {

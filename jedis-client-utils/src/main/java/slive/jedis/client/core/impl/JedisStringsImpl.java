@@ -12,7 +12,7 @@ import java.util.List;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.params.SetParams;
 import slive.jedis.client.core.JedisStrings;
-import slive.jedis.client.util.PojoJsonUtils;
+import slive.jedis.client.util.JsonUtils;
 
 /**
  * 描述：redis String相关操作类，参考<b>http://www.redis.net.cn/order/"></b>
@@ -47,7 +47,7 @@ public final class JedisStringsImpl extends JedisKeysImpl implements JedisString
     public <T> T get(String key, Class<T> pojoClazz) {
         String ret = get(key);
         if (ret != null) {
-            return PojoJsonUtils.convert2Object(ret, pojoClazz);
+            return JsonUtils.convert2Object(ret, pojoClazz);
         }
         return null;
     }
@@ -76,13 +76,13 @@ public final class JedisStringsImpl extends JedisKeysImpl implements JedisString
             return null;
         }
         boolean isString = false;
-        String newVal = PojoJsonUtils.convert2String(newPojoObject);
+        String newVal = JsonUtils.convert2String(newPojoObject);
         String ret = jedis.getSet(key, newVal);
         if (ret != null) {
             if (isString) {
                 return (T) ret;
             }
-            return (T) PojoJsonUtils.convert2Object(ret, newPojoObject.getClass());
+            return (T) JsonUtils.convert2Object(ret, newPojoObject.getClass());
         }
         return null;
     }
@@ -123,7 +123,7 @@ public final class JedisStringsImpl extends JedisKeysImpl implements JedisString
     public <T> List<T> mget(Class<T> pojoClazz, String... keys) {
         List<String> mget = mget(keys);
         if (mget != null) {
-            return PojoJsonUtils.convert2ObjectList(mget, pojoClazz);
+            return JsonUtils.convert2ObjectList(mget, pojoClazz);
         }
         return Collections.EMPTY_LIST;
     }
@@ -162,7 +162,7 @@ public final class JedisStringsImpl extends JedisKeysImpl implements JedisString
         if (key == null || pojoObject == null) {
             return false;
         }
-        String setVal = PojoJsonUtils.convert2String(pojoObject);
+        String setVal = JsonUtils.convert2String(pojoObject);
         return RET_OK_STR.equals(jedis.setex(key, seconds, setVal));
     }
 
@@ -177,7 +177,7 @@ public final class JedisStringsImpl extends JedisKeysImpl implements JedisString
         if (key == null || pojoObject == null) {
             return false;
         }
-        String setVal = PojoJsonUtils.convert2String(pojoObject);
+        String setVal = JsonUtils.convert2String(pojoObject);
         return RET_OK_STR.equals(jedis.psetex(key, millisseconds, setVal));
     }
 
@@ -191,7 +191,7 @@ public final class JedisStringsImpl extends JedisKeysImpl implements JedisString
         if (key == null || pojoObject == null) {
             return false;
         }
-        String setVal = PojoJsonUtils.convert2String(pojoObject);
+        String setVal = JsonUtils.convert2String(pojoObject);
         SetParams params = new SetParams();
         params.nx().px(millisseconds);
         return RET_OK_STR.equals(jedis.set(key, setVal, params));
@@ -210,7 +210,7 @@ public final class JedisStringsImpl extends JedisKeysImpl implements JedisString
         if (key == null || pojoObject == null) {
             return false;
         }
-        String setVal = PojoJsonUtils.convert2String(pojoObject);
+        String setVal = JsonUtils.convert2String(pojoObject);
         if (whenExist) {
             return RET_OK_INT == jedis.setnx(key, setVal);
         }
@@ -229,7 +229,7 @@ public final class JedisStringsImpl extends JedisKeysImpl implements JedisString
         if (key == null || pojoObject == null) {
             return false;
         }
-        String setVal = PojoJsonUtils.convert2String(pojoObject);
+        String setVal = JsonUtils.convert2String(pojoObject);
         SetParams params = new SetParams();
         params.nx().ex(seconds);
         return RET_OK_STR.equals(jedis.set(key, setVal, params));

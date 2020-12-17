@@ -17,3 +17,6 @@ bin/
 
 # Maven
 target/
+
+# other
+.DS_Store

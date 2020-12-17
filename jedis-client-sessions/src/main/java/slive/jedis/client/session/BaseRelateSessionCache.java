@@ -24,7 +24,9 @@ import slive.jedis.client.util.JedisUtils;
  */
 public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements RelateSessionCache<T> {
 
-    /** logger */
+    /**
+     * logger
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseRelateSessionCache.class);
 
     private static final int PUT_ACTION = 1;
@@ -59,8 +61,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                 // 主键只能一个
                 if (sessionKeyField != null) {
                     throw new RuntimeException("SessionKey has existed, the field:" + fName);
-                }
-                else {
+                } else {
                     sessionKeyField = field;
                     sessionKeyMethod = fetchGetMethod(clazz, fName);
                     // 主键不能做外键
@@ -77,8 +78,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                     Method getMethod = fetchGetMethod(clazz, fName);
                     FSessionCache fbs = new FSessionCache(fPrefix, secondTimeout, field, getMethod);
                     fSessionCaches.put(fPrefix, fbs);
-                }
-                else {
+                } else {
                     throw new RuntimeException("SessionFKey has existed, the field:" + fName);
                 }
             }
@@ -107,8 +107,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         Method gMethod = null;
         try {
             gMethod = clazz.getMethod(readMethodName);
-        }
-        catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) {
             // ignore
             LOGGER.warn("method can not found1:{}", readMethodName);
         }
@@ -117,8 +116,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                 readMethodName = "get" + fName;
                 gMethod = clazz.getMethod(readMethodName);
             }
-        }
-        catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) {
             // ignore
             LOGGER.warn("method can not found2:{}", readMethodName);
         }
@@ -168,8 +166,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                 handle(key, value, oldObj, PUT_ACTION);
             }
             return ret;
-        }
-        else {
+        } else {
             return super.put(key, value);
         }
     }
@@ -189,8 +186,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                         String[] fvs = fetchFKeys(fV);
                         if (fvs != null) {
                             fsc.remove(fvs);
-                        }
-                        else {
+                        } else {
                             fsc.remove(fV.toString());
                         }
                     }
@@ -204,11 +200,9 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                             for (String newFkey : fvs) {
                                 fsc.put(newFkey, key);
                             }
-                        }
-                        else if (handleAction == REMOVE_ACTION) {
+                        } else if (handleAction == REMOVE_ACTION) {
                             fsc.remove(fvs);
-                        }
-                        else {
+                        } else {
                             for (String newFkey : fvs) {
                                 fsc.expire(newFkey);
                             }
@@ -216,8 +210,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                     }
                 }
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             LOGGER.error("fkey handle error.", e);
         }
 
@@ -242,18 +235,15 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                         fkey = fV.toString();
                         if (handleAction == PUT_ACTION) {
                             csc.put(fkey, key);
-                        }
-                        else if (handleAction == REMOVE_ACTION) {
+                        } else if (handleAction == REMOVE_ACTION) {
                             csc.remove(fkey, key);
-                        }
-                        else {
+                        } else {
                             csc.expire(fkey);
                         }
                     }
                 }
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             LOGGER.error("category handle error.", e);
         }
     }
@@ -263,19 +253,16 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
         Class<?> fvClass = fV.getClass();
         if (ClassUtils.isArrayType(fvClass)) {
             fvs = (String[]) fV;
-        }
-        else if (ClassUtils.isMapType(fvClass)) {
+        } else if (ClassUtils.isMapType(fvClass)) {
             Set<String> fkSet = ((Map<String, Object>) fV).keySet();
             fvs = new String[fkSet.size()];
             fkSet.toArray(fvs);
-        }
-        else if (ClassUtils.isCollectionType(fvClass)) {
+        } else if (ClassUtils.isCollectionType(fvClass)) {
             Collection<String> fkSet = ((Collection<String>) fV);
             fvs = new String[fkSet.size()];
             fkSet.toArray(fvs);
-        }
-        else {
-            fvs = new String[] { fV.toString() };
+        } else {
+            fvs = new String[]{fV.toString()};
         }
         return fvs;
     }
@@ -320,8 +307,7 @@ public class BaseRelateSessionCache<T> extends BaseSessionCache<T> implements Re
                 return false;
             }
             return put(key.toString(), value);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             LOGGER.error("put value error:", e);
         }
         return false;

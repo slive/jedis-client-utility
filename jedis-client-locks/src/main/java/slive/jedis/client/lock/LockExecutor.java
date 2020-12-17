@@ -11,12 +11,14 @@ public interface LockExecutor<T extends BaseLockExecutorContext> {
 
     /**
      * 获取定义锁的前缀，用于区分相同的key在不同模块中使用不同的锁
+     *
      * @return
      */
     String getPrefix();
 
     /**
      * 获取默认锁超时时间，单位ms
+     *
      * @return
      */
     long getDefaultMillisTimeout();

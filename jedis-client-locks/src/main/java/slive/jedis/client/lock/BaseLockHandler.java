@@ -6,12 +6,14 @@ import org.slf4j.LoggerFactory;
 /**
  * 描述：<br>
  * 默认实现的锁处理器
+ *
  * @author slive
  * @date 2020/1/3
  */
 public abstract class BaseLockHandler implements LockHandler {
-
-    /** logger */
+    /**
+     * logger
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseLockHandler.class);
 
     public void beforeHandle(LockExecutorContext context) {

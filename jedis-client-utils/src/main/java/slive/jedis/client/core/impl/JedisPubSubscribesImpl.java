@@ -14,7 +14,7 @@ import java.util.Map;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 import slive.jedis.client.core.JedisPubSubscribes;
-import slive.jedis.client.util.PojoJsonUtils;
+import slive.jedis.client.util.JsonUtils;
 
 /**
  * 描述：jedis发布订阅操作类，参考<b>http://www.redis.net.cn/order/"></b>
@@ -53,7 +53,7 @@ public final class JedisPubSubscribesImpl extends JedisKeysImpl implements Jedis
         if (channel == null | pojoMsg == null) {
             return DEFAULT_VAL_INT;
         }
-        return jedis.publish(channel, PojoJsonUtils.convert2String(pojoMsg));
+        return jedis.publish(channel, JsonUtils.convert2String(pojoMsg));
     }
 
     /**

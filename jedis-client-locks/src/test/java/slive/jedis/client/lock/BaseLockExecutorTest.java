@@ -15,7 +15,7 @@ import slive.jedis.client.util.JedisUtils;
 
 /**
  * 描述：<br>
- *  锁执行器测试类
+ * 锁执行器测试类
  *
  * @author slive
  * @date 2020/1/1
@@ -54,8 +54,7 @@ public class BaseLockExecutorTest {
         }
         try {
             countDownLatch.await();
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -70,8 +69,7 @@ public class BaseLockExecutorTest {
             public Object onHandle(LockExecutorContext context) {
                 try {
                     Thread.sleep(2500);
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 throw new RuntimeException("throw exception.");
@@ -95,8 +93,7 @@ public class BaseLockExecutorTest {
             public Object onHandle(LockExecutorContext context) {
                 try {
                     Thread.sleep(2500);
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 BaseLockExecutorContext recontext = createExecutorContext(1, key, owner, "rentry");
@@ -104,8 +101,7 @@ public class BaseLockExecutorTest {
                     public Object onHandle(LockExecutorContext context) {
                         try {
                             Thread.sleep(1500);
-                        }
-                        catch (InterruptedException e) {
+                        } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                         return context.getOwner() + ":" + context.getAction();
@@ -128,8 +124,7 @@ public class BaseLockExecutorTest {
                 long l = atomicLong.incrementAndGet();
                 try {
                     Thread.sleep(2000);
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
 

@@ -17,7 +17,9 @@ import org.slf4j.LoggerFactory;
  */
 public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
 
-    /** logger */
+    /**
+     * logger
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseLockExecutor.class);
 
     private static final Map<String, BaseLockExecutor> EXECUTOR_MAP = new HashMap<String, BaseLockExecutor>();
@@ -34,9 +36,10 @@ public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
 
     /**
      * 锁执行器构造函数
-     * @param prefix 锁前缀，用于区分不同模块的锁，以免重复
+     *
+     * @param prefix           锁前缀，用于区分不同模块的锁，以免重复
      * @param defMillisTimeout 默认超时时间ms，必须为整数，注意设置该值，避免锁过快超时
-     * @param lock 锁见{@link Lock}
+     * @param lock             锁见{@link Lock}
      */
     public BaseLockExecutor(String prefix, long defMillisTimeout, Lock lock) {
         init(prefix, defMillisTimeout, lock);
@@ -44,8 +47,9 @@ public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
 
     /**
      * 锁执行器构造函数，锁时间为默认值，见{@link #DEFAULT_MILLIS_TIMEOUT}
+     *
      * @param prefix 锁前缀，用于区分不同模块的锁，以免重复
-     * @param lock 锁见{@link Lock}
+     * @param lock   锁见{@link Lock}
      */
     public BaseLockExecutor(String prefix, Lock lock) {
         init(prefix, DEFAULT_MILLIS_TIMEOUT, lock);
@@ -125,8 +129,7 @@ public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
             if (reentryLocked) {
                 // 已获取锁后延长锁的时间
                 locked = lock.expireLock(finalKey, value, timeout);
-            }
-            else {
+            } else {
                 // 未获取锁继续获取
                 locked = lock.tryLock(finalKey, value, timeout);
             }
@@ -135,27 +138,22 @@ public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
                 LOGGER.info("execute handler, context:{}", context.toSimpleString());
                 Object ret = handler.onHandle(context);
                 context.setResult(ret).setHandledTime();
-            }
-            else {
+            } else {
                 try {
                     handler.onFailed(context);
-                }
-                catch (Exception ex2) {
+                } catch (Exception ex2) {
                     // ignore
                     LOGGER.error("execute onFailed exception:{}", ex2);
                 }
             }
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             try {
                 handler.onError(context, ex);
-            }
-            catch (Exception ex1) {
+            } catch (Exception ex1) {
                 // ignore
                 LOGGER.error("execute onError exception:{}", ex1);
             }
-        }
-        finally {
+        } finally {
             // 自己申请锁自己释放
             if (locked && !reentryLocked) {
                 lock.unLock(finalKey, value);
@@ -170,8 +168,7 @@ public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
 
             try {
                 handler.afterHandle(context);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 LOGGER.error("execute afterHandle exception:{}", e);
             }
             context.setEndTime();
@@ -192,8 +189,7 @@ public class BaseLockExecutor implements LockExecutor<BaseLockExecutorContext> {
         String value = null;
         if (StringUtils.isNotEmpty(operator)) {
             value = owner + ":" + operator;
-        }
-        else {
+        } else {
             value = owner;
         }
         return value;

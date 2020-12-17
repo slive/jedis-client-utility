@@ -7,7 +7,7 @@
 package slive.jedis.client.core.impl;
 
 import slive.jedis.client.core.JedisHashes;
-import slive.jedis.client.util.PojoJsonUtils;
+import slive.jedis.client.util.JsonUtils;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -79,7 +79,7 @@ public final class JedisHashesImpl extends JedisKeysImpl implements JedisHashes 
     public <T> T hget(String key, String fieldKey, Class<T> pojoClazz) {
         String ret = hget(key, fieldKey);
         if (ret != null) {
-            return PojoJsonUtils.convert2Object(ret, pojoClazz);
+            return JsonUtils.convert2Object(ret, pojoClazz);
         }
         return null;
     }
@@ -109,7 +109,7 @@ public final class JedisHashesImpl extends JedisKeysImpl implements JedisHashes 
             Set<Entry<String, String>> entrySet = ret.entrySet();
             T t = null;
             for (Entry<String, String> e : entrySet) {
-                t = PojoJsonUtils.convert2Object(e.getValue(), pojoClazz);
+                t = JsonUtils.convert2Object(e.getValue(), pojoClazz);
                 if (t != null) {
                     retMap.put(e.getKey(), t);
                 }
@@ -144,7 +144,7 @@ public final class JedisHashesImpl extends JedisKeysImpl implements JedisHashes 
         if (ret != null) {
             List<T> retList = new LinkedList<T>();
             for (String r : ret) {
-                retList.add(PojoJsonUtils.convert2Object(r, clazz));
+                retList.add(JsonUtils.convert2Object(r, clazz));
             }
             return retList;
         }
@@ -165,7 +165,7 @@ public final class JedisHashesImpl extends JedisKeysImpl implements JedisHashes 
         Map<String, String> newHash = new LinkedHashMap<String, String>();
         Set<Entry<String, Object>> entrySet = hash.entrySet();
         for (Entry<String, Object> e : entrySet) {
-            newHash.put(e.getKey(), PojoJsonUtils.convert2String(e.getValue()));
+            newHash.put(e.getKey(), JsonUtils.convert2String(e.getValue()));
         }
         return RET_OK_STR.equals(jedis.hmset(key, newHash));
     }
@@ -181,7 +181,7 @@ public final class JedisHashesImpl extends JedisKeysImpl implements JedisHashes 
         if (key == null || fieldKey == null || fieldVal == null) {
             return false;
         }
-        return RET_OK_INT == jedis.hset(key, fieldKey, PojoJsonUtils.convert2String(fieldVal));
+        return RET_OK_INT == jedis.hset(key, fieldKey, JsonUtils.convert2String(fieldVal));
     }
 
     /**
@@ -195,7 +195,7 @@ public final class JedisHashesImpl extends JedisKeysImpl implements JedisHashes 
         if (key == null || fieldKey == null || fieldVal == null) {
             return false;
         }
-        return RET_OK_INT == jedis.hsetnx(key, fieldKey, PojoJsonUtils.convert2String(fieldVal));
+        return RET_OK_INT == jedis.hsetnx(key, fieldKey, JsonUtils.convert2String(fieldVal));
     }
 
     /**
@@ -265,7 +265,7 @@ public final class JedisHashesImpl extends JedisKeysImpl implements JedisHashes 
         if (ret != null) {
             List<T> retList = new LinkedList<T>();
             for (String r : ret) {
-                retList.add(PojoJsonUtils.convert2Object(r, pojoClazz));
+                retList.add(JsonUtils.convert2Object(r, pojoClazz));
             }
             return retList;
         }
